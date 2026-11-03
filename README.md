@@ -9,7 +9,7 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 ## Two ways to build a plan
 
 - **Quick match** runs entirely in your browser. It matches your description against topic tags and short summaries of every session. It is instant and free.
-- **Build my programme** uses an AI model to read every session and explain each pick in a sentence. It takes about 30 seconds.
+- **Build my programme** uses an AI model to read every session and explain each pick in a sentence. It takes about 30 seconds. The ten example descriptions come with ready-made plans, so they appear straight away without an AI call.
 
 ## What it does
 
