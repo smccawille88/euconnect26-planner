@@ -1,0 +1,1798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Glasgow Connect Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow reading column; composer on top, the plan as a day-by-day time rail, then reference sections. */
+:root{
+  --bg:#f3f5fb; --surface:#ffffff; --ink:#14214f; --muted:#56618a; --line:#d8deee;
+  --accent:#0f8278; --accent-ink:#ffffff; --accent-soft:#e2f6f3; --loch:#1c3687; --loch-soft:#e4e9f7;
+  --btn:#3cc1b4; --btn-ink:#14214f;
+  --warn:#9a5b00;
+  --bronze:#2b3044; --band:#1c3687; --band-ink:#ffffff; --band-muted:#c9d3f2; --band-accent:#3cc1b4;
+  --f-display:"Montserrat", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1533; --surface:#162047; --ink:#e8ecf8; --muted:#a3add0; --line:#2a3566;
+  --accent:#5fd6ca; --accent-ink:#0b1b3d; --accent-soft:#143a46; --loch:#8fa6ff; --loch-soft:#1f2c62;
+  --btn:#3cc1b4; --btn-ink:#0e1533; --warn:#e0a54a;
+  --bronze:#c5cbe0; --band:#13245e; --band-ink:#ffffff; --band-muted:#b3bfe6; --band-accent:#3cc1b4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1533; --surface:#162047; --ink:#e8ecf8; --muted:#a3add0; --line:#2a3566;
+  --accent:#5fd6ca; --accent-ink:#0b1b3d; --accent-soft:#143a46; --loch:#8fa6ff; --loch-soft:#1f2c62;
+  --btn:#3cc1b4; --btn-ink:#0e1533; --warn:#e0a54a;
+  --bronze:#c5cbe0; --band:#13245e; --band-ink:#ffffff; --band-muted:#b3bfe6; --band-accent:#3cc1b4; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body);margin:0}
+.wrap{max-width:860px;margin:-22px auto 0;position:relative;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,6vw,3.1rem);font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:700}
+.eyebrow{font:500 .78rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--loch)}
+.lede{color:var(--muted);max-width:60ch;margin:.6rem 0 0}
+.band{background:var(--band);color:var(--band-ink);border-bottom:4px solid var(--band-accent)}
+.band .inner{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 40px;display:grid;gap:.5rem}
+.demo-flag{justify-self:start;font:600 .75rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:#14214f;background:var(--band-accent);border-radius:999px;padding:3px 11px}
+.band .logo{justify-self:start;display:inline-flex;background:#fff;border-radius:10px;padding:6px 12px;margin-bottom:.4rem}
+.band .logo img{height:34px;width:auto;display:block}
+.band .eyebrow{color:var(--band-accent)}
+.band .lede{color:var(--band-muted)}
+.band .dates{display:flex;flex-wrap:wrap;gap:6px;margin-top:.4rem}
+.band .dates span{font:600 .8rem var(--f-body);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:2px 10px;color:var(--band-ink)}
+.composer{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 24px rgba(10,20,60,.12);padding:18px;display:grid;gap:12px}
+label.q{font-weight:600}
+textarea::placeholder{color:var(--muted);opacity:.55;font-style:italic}
+
+textarea{width:100%;min-height:96px;resize:vertical;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+textarea:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips,.examples{display:flex;flex-wrap:wrap;gap:6px}
+.tip{margin:0;font-size:.9rem;color:var(--muted)}
+.tip b{color:var(--ink);font-weight:600}
+.helper summary{cursor:pointer;font-size:.9rem;color:var(--accent);font-weight:600}
+.helpgrid{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:8px 12px;align-items:center;margin:10px 0}
+.helpgrid label{font-size:.88rem;color:var(--muted)}
+.helpgrid input{font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+@media (max-width:520px){.helpgrid{grid-template-columns:1fr}}
+.chip{font:inherit;font-size:.86rem;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:600 .95rem var(--f-body);border-radius:10px;padding:10px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn);text-transform:uppercase;letter-spacing:.03em;font-size:.88rem}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.small{padding:6px 11px;font-size:.85rem}
+.hint{font-size:.85rem;color:var(--muted)}
+#planSec.building #plan,#planSec.building #summary{opacity:.25;transition:opacity .2s}
+.status{font-size:.9rem;color:var(--muted);min-height:1.4em}
+section{margin-top:2.4rem}
+.planhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:end;margin-bottom:.6rem}
+.summary{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin:.4rem 0 1rem;max-width:72ch}
+.tag-example{font:500 .72rem var(--f-mono);color:var(--warn);letter-spacing:.04em;text-transform:uppercase}
+.day{margin-top:1.4rem}
+.day h3{font-size:1.05rem;display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
+.day h3 .d{font:500 .8rem var(--f-mono);color:var(--muted)}
+.slot{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.slot:last-child{border-bottom:0}
+.time{font:500 .85rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;padding-top:3px}
+.sess{min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.82rem;color:var(--muted)}
+.code{font:500 .76rem var(--f-mono);background:var(--loch-soft);color:var(--loch);border-radius:6px;padding:1px 7px}
+.title{font-weight:600;font-size:1.02rem;margin:3px 0 2px;display:block;color:var(--ink);text-decoration:none}
+.title{cursor:help}
+.more{display:inline-block;margin-top:3px;font-size:.8rem;color:var(--accent);text-decoration:none}
+.more:hover{text-decoration:underline}
+.sess{position:relative}
+.sum{display:none;position:absolute;z-index:5;left:0;top:100%;margin-top:4px;width:min(460px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:3px solid var(--loch);border-radius:10px;padding:10px 12px;font-size:.88rem;line-height:1.45;box-shadow:0 10px 28px rgba(10,20,60,.18)}
+.tw{position:relative}
+.tw:hover .sum,.title:focus-visible + .sum{display:block}
+.sess:hover,.sess:focus-within{z-index:20}
+@media (hover:none){.sum{display:block;position:static;box-shadow:none;border:0;border-left:2px solid var(--loch);border-radius:0;padding:2px 0 2px 10px;margin-top:4px;color:var(--muted);width:auto}}
+.people{font-size:.86rem;color:var(--muted)}
+.glance{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 1rem;display:grid;gap:10px}
+.glance h3{font-size:1rem;margin:0}
+.mix{display:flex;height:14px;border-radius:999px;overflow:hidden;gap:2px;background:var(--line)}
+.mix span{display:block;min-width:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--muted)}
+.legend .lg{display:inline-flex;align-items:center;gap:6px}
+.legend .lg b{color:var(--ink);font-variant-numeric:tabular-nums}
+.legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tracks{display:grid;gap:6px;margin-top:4px}
+.track{display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px;align-items:center}
+.tlab{font:500 .78rem var(--f-mono);color:var(--muted)}
+.lane{position:relative;height:22px;background:var(--bg);border-radius:6px}
+.track.axis .lane{height:14px;background:none}
+.tick{position:absolute;top:0;transform:translateX(-50%);font:500 .68rem var(--f-mono);color:var(--muted);white-space:nowrap}
+.blk{position:absolute;top:3px;bottom:3px;border-radius:4px;background:var(--loch)}
+.blk.also{background:var(--accent-soft);border:2px solid var(--btn)}
+.blk.key{opacity:.45}
+.glance-note{margin:0;font-size:.8rem}
+@media print{.glance{display:none!important}}
+.alsobox{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin:0 0 1rem}
+.alsobox h3{font-size:1rem;margin:0}
+.alsobox p{margin:2px 0 8px}
+.alsobox ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.alsobox li{display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:baseline}
+.alsobox li > span{min-width:0}
+.alsobox .alsosum{display:block;font-size:.88rem;color:var(--muted);margin-top:2px}
+.alsobox li{padding-bottom:4px}
+.alsobox .when{font:500 .8rem var(--f-mono);color:var(--muted)}
+.alsobox a{color:var(--ink);font-weight:600;text-decoration-color:var(--accent)}
+.loader{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:12px 14px}
+.loadart{position:relative}.loadart>svg{width:190px;height:auto;display:block}.trainlayer{position:absolute;left:0;top:0;width:200px;height:140px;transform-origin:0 0;transform:scale(.95);pointer-events:none}#subway[hidden]+.trainlayer{display:none}.trainbox{position:absolute;left:-14px;top:-6px;width:29px;height:12px;transform-origin:14px 6px;animation:ride 3.2s linear infinite;will-change:transform}.trainbox svg{display:block;width:29px;height:12px}@media (max-width:520px){.trainlayer{transform:scale(.6)}}@media (prefers-reduced-motion:reduce){.trainbox{animation:none;transform:translate(60px,26px)}}@keyframes ride{0.00%{transform:translate(60.0px,26.0px) rotate(0.0deg)}1.25%{transform:translate(65.5px,26.0px) rotate(0.0deg)}2.50%{transform:translate(70.9px,26.0px) rotate(0.0deg)}3.75%{transform:translate(76.4px,26.0px) rotate(0.0deg)}5.00%{transform:translate(81.8px,26.0px) rotate(0.0deg)}6.25%{transform:translate(87.3px,26.0px) rotate(0.0deg)}7.50%{transform:translate(92.7px,26.0px) rotate(0.0deg)}8.75%{transform:translate(98.2px,26.0px) rotate(0.0deg)}10.00%{transform:translate(103.6px,26.0px) rotate(0.0deg)}11.25%{transform:translate(109.1px,26.0px) rotate(0.0deg)}12.50%{transform:translate(114.6px,26.0px) rotate(0.0deg)}13.75%{transform:translate(120.0px,26.0px) rotate(0.0deg)}15.00%{transform:translate(125.5px,26.0px) rotate(0.0deg)}16.25%{transform:translate(130.9px,26.0px) rotate(0.0deg)}17.50%{transform:translate(136.4px,26.0px) rotate(0.0deg)}18.75%{transform:translate(141.8px,26.0px) rotate(2.4deg)}20.00%{transform:translate(147.3px,26.6px) rotate(9.5deg)}21.25%{transform:translate(152.6px,27.8px) rotate(16.6deg)}22.50%{transform:translate(157.7px,29.7px) rotate(23.7deg)}23.75%{transform:translate(162.5px,32.2px) rotate(30.8deg)}25.00%{transform:translate(167.0px,35.3px) rotate(37.9deg)}26.25%{transform:translate(171.1px,38.9px) rotate(45.0deg)}27.50%{transform:translate(174.7px,43.0px) rotate(52.1deg)}28.75%{transform:translate(177.8px,47.5px) rotate(59.2deg)}30.00%{transform:translate(180.3px,52.3px) rotate(66.3deg)}31.25%{transform:translate(182.2px,57.5px) rotate(73.4deg)}32.50%{transform:translate(183.4px,62.8px) rotate(80.5deg)}33.75%{transform:translate(184.0px,68.2px) rotate(87.6deg)}35.00%{transform:translate(183.8px,73.6px) rotate(94.7deg)}36.25%{transform:translate(183.1px,79.0px) rotate(101.9deg)}37.50%{transform:translate(181.6px,84.3px) rotate(109.0deg)}38.75%{transform:translate(179.5px,89.3px) rotate(116.1deg)}40.00%{transform:translate(176.8px,94.1px) rotate(123.2deg)}41.25%{transform:translate(173.6px,98.4px) rotate(130.3deg)}42.50%{transform:translate(169.8px,102.4px) rotate(137.4deg)}43.75%{transform:translate(165.6px,105.8px) rotate(144.5deg)}45.00%{transform:translate(160.9px,108.7px) rotate(151.6deg)}46.25%{transform:translate(156.0px,111.0px) rotate(158.7deg)}47.50%{transform:translate(150.8px,112.7px) rotate(165.8deg)}48.75%{transform:translate(145.4px,113.7px) rotate(172.9deg)}50.00%{transform:translate(140.0px,114.0px) rotate(180.0deg)}51.25%{transform:translate(134.5px,114.0px) rotate(180.0deg)}52.50%{transform:translate(129.1px,114.0px) rotate(180.0deg)}53.75%{transform:translate(123.6px,114.0px) rotate(180.0deg)}55.00%{transform:translate(118.2px,114.0px) rotate(180.0deg)}56.25%{transform:translate(112.7px,114.0px) rotate(180.0deg)}57.50%{transform:translate(107.3px,114.0px) rotate(180.0deg)}58.75%{transform:translate(101.8px,114.0px) rotate(180.0deg)}60.00%{transform:translate(96.4px,114.0px) rotate(180.0deg)}61.25%{transform:translate(90.9px,114.0px) rotate(180.0deg)}62.50%{transform:translate(85.4px,114.0px) rotate(180.0deg)}63.75%{transform:translate(80.0px,114.0px) rotate(180.0deg)}65.00%{transform:translate(74.5px,114.0px) rotate(180.0deg)}66.25%{transform:translate(69.1px,114.0px) rotate(180.0deg)}67.50%{transform:translate(63.6px,114.0px) rotate(180.0deg)}68.75%{transform:translate(58.2px,114.0px) rotate(182.4deg)}70.00%{transform:translate(52.7px,113.4px) rotate(189.5deg)}71.25%{transform:translate(47.4px,112.2px) rotate(196.6deg)}72.50%{transform:translate(42.3px,110.3px) rotate(203.7deg)}73.75%{transform:translate(37.5px,107.8px) rotate(210.8deg)}75.00%{transform:translate(33.0px,104.7px) rotate(217.9deg)}76.25%{transform:translate(28.9px,101.1px) rotate(225.0deg)}77.50%{transform:translate(25.3px,97.0px) rotate(232.1deg)}78.75%{transform:translate(22.2px,92.5px) rotate(239.2deg)}80.00%{transform:translate(19.7px,87.7px) rotate(246.3deg)}81.25%{transform:translate(17.8px,82.5px) rotate(253.4deg)}82.50%{transform:translate(16.6px,77.2px) rotate(260.5deg)}83.75%{transform:translate(16.0px,71.8px) rotate(267.6deg)}85.00%{transform:translate(16.2px,66.4px) rotate(274.7deg)}86.25%{transform:translate(16.9px,61.0px) rotate(281.9deg)}87.50%{transform:translate(18.4px,55.7px) rotate(289.0deg)}88.75%{transform:translate(20.5px,50.7px) rotate(296.1deg)}90.00%{transform:translate(23.2px,45.9px) rotate(303.2deg)}91.25%{transform:translate(26.4px,41.6px) rotate(310.3deg)}92.50%{transform:translate(30.2px,37.6px) rotate(317.4deg)}93.75%{transform:translate(34.4px,34.2px) rotate(324.5deg)}95.00%{transform:translate(39.1px,31.3px) rotate(331.6deg)}96.25%{transform:translate(44.0px,29.0px) rotate(338.7deg)}97.50%{transform:translate(49.2px,27.3px) rotate(345.8deg)}98.75%{transform:translate(54.6px,26.3px) rotate(352.9deg)}100.00%{transform:translate(60.0px,26.0px) rotate(360.0deg)}}
+.stops{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:.92rem}
+.stops li{display:flex;gap:9px;align-items:center;color:var(--muted)}
+.stops li::before{content:"";flex:none;width:11px;height:11px;border-radius:50%;border:2.5px solid #f26722;background:var(--surface)}
+.stops li.on{color:var(--ink);font-weight:600}
+.stops li.on::before{background:#f26722}
+.loadcap{font-size:.8rem;color:var(--muted);margin-top:8px}
+.cone{transform-box:fill-box;animation:drop .7s cubic-bezier(.3,1.5,.6,1) both}
+@keyframes drop{from{transform:translateY(-36px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.cone{animation:none}}
+@media (max-width:520px){.loader{grid-template-columns:120px minmax(0,1fr)}.loadart>svg{width:120px}}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:600 .85rem var(--f-body);background:var(--surface);color:var(--muted);border:0;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink)}
+.tlf{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 16px;font:500 .78rem/1.5 var(--f-mono);color:var(--ink)}
+.tlf + .tlf{margin-top:16px}
+.tlf-top{display:flex;justify-content:space-between;gap:12px;color:var(--muted)}
+.tlf-title{text-align:center;margin:10px 0 12px}
+.tlf-title div:first-child{font-weight:700}
+.tlf-scroll{overflow-x:auto}
+.tlf table{width:100%;border-collapse:collapse}
+.tlf th{text-align:left;font-weight:700;border-top:1.5px solid var(--ink);border-bottom:1px solid var(--ink);padding:4px 16px 4px 0;white-space:nowrap}
+.tlf td{padding:4px 16px 4px 0;vertical-align:top}
+.tlf th:last-child,.tlf td:last-child{padding-right:0}
+.tlf td.nw{white-space:nowrap}
+.tlf tr.grp td{font-weight:700;padding:14px 0 3px;border-bottom:1px dashed var(--line)}
+.tlf tbody tr.grp:first-child td{padding-top:8px}
+.tlf tr.grp + tr td{padding-top:6px}
+.tlf tbody tr:last-child td{border-bottom:1.5px solid var(--ink)}
+.tlf tbody tr.first:not(:first-child) td{border-top:1px dashed var(--line);padding-top:10px}
+.tlf td:first-child{font-weight:700}
+.tlf svg.fig{width:100%;min-width:420px;height:auto;display:block;font-family:var(--f-mono)}
+.fig .fg-band{fill:var(--accent-soft)}
+.fig .fg-zebra{fill:var(--bg);opacity:.6}
+.fig .fg-grid{stroke:var(--line);stroke-width:1}
+.fig .fg-axis{stroke:var(--ink);stroke-width:1.5}
+.fig .fg-tick{fill:var(--muted);font-size:11px}
+.fig .fg-lab{font-size:12px;font-weight:700}
+.fig text.fg-lab:not([fill]){fill:var(--ink)}
+.fig .fg-wait{stroke-width:1.5;stroke-dasharray:3 4;opacity:.7}
+.fig .fg-dot{fill:var(--surface);stroke-width:2.5}
+.tlf .foot{margin-top:10px;color:var(--muted);display:grid;gap:2px}
+@media print{
+  body{background:#fff;color:#000}
+  .band,.composer,section:not(#planSec),footer,.planhead .row,.summary,.alsobox,.alts,.remove,.more,.sum,.tag-example{display:none!important}
+  .planhead,.loader,.tlf-top span:last-child{display:none!important}
+  .wrap{margin:0;padding:0}
+  .tlf{border:0;padding:0;break-inside:auto}
+  .tlf + .tlf{break-before:page}
+}
+@page{margin:16mm 14mm;@top-right{content:"Page " counter(page) " of " counter(pages);font:9pt 'JetBrains Mono',monospace;color:#555}}
+.rain{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.rain svg{width:120px;height:auto}
+.rain h3{margin:0 0 4px;font-size:1.1rem}
+.rain p{margin:0;color:var(--muted)}
+.rain .cloud{fill:var(--muted);opacity:.55}
+.rain .drops line{stroke:var(--loch);stroke-width:2.5;stroke-linecap:round;animation:fall 1.1s linear infinite}
+.rain .drops line:nth-child(2){animation-delay:.35s}.rain .drops line:nth-child(3){animation-delay:.7s}
+.rain .drops line:nth-child(4){animation-delay:.2s}.rain .drops line:nth-child(5){animation-delay:.55s}.rain .drops line:nth-child(6){animation-delay:.9s}
+@keyframes fall{0%{transform:translateY(-8px);opacity:0}30%{opacity:1}100%{transform:translateY(12px);opacity:0}}
+.sess.lowered{animation:lower .9s .45s ease-out both}
+@keyframes lower{from{transform:translateY(-28px);opacity:.25}to{transform:none;opacity:1}}
+.crane{position:absolute;right:8px;top:-60px;width:92px;height:auto;z-index:6;pointer-events:none;animation:craneFade 2.2s ease both}
+.crane .cr-mast,.crane .cr-jib,.crane .cr-weight,.crane .cr-cab,.crane .cr-x{fill:var(--loch)}
+.crane .cr-cable{stroke:var(--muted);stroke-width:1.5}
+.crane .cr-h{fill:var(--btn)}
+.crane .cr-hook{animation:hook 1.2s ease-in-out both;transform-origin:26px 14px}
+@keyframes hook{0%{transform:scaleY(.2)}60%{transform:scaleY(1)}100%{transform:scaleY(.25)}}
+@keyframes craneFade{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.rain .drops line,.sess.lowered,.crane,.crane .cr-hook{animation:none}.crane{display:none}}
+@media (max-width:520px){.rain{grid-template-columns:80px minmax(0,1fr)}.rain svg{width:80px}}
+.btn.brawed{display:inline-flex;align-items:center;gap:6px;border-color:#005eb8;color:var(--ink)}
+.saltire{width:20px;height:13px;border-radius:2px;transform-origin:left center;animation:wave 1s ease-in-out 2}
+@keyframes wave{0%,100%{transform:skewY(0)}25%{transform:skewY(-6deg)}75%{transform:skewY(6deg)}}
+.tracks{position:relative}
+.nessie{position:absolute;bottom:2px;width:72px;height:auto;pointer-events:none;animation:swim 4s ease-in-out both}
+.nessie .hump{fill:var(--loch)}
+.nessie .eye{fill:var(--surface)}
+.nessie .ripple{fill:none;stroke:var(--btn);stroke-width:1.5}
+@keyframes swim{0%{left:30px;opacity:0;transform:translateY(8px)}12%{opacity:1;transform:none}80%{left:calc(100% - 80px);opacity:1;transform:none}100%{left:calc(100% - 80px);opacity:0;transform:translateY(12px)}}
+.thistle{width:14px;height:17px;flex:none}
+.badge-also{display:inline-flex;align-items:center;gap:4px}
+.alsobox h3{display:flex;align-items:center;gap:6px}
+.alsobox h3 .thistle{width:18px;height:22px}
+.thistle .bloom{transform-origin:10px 10px;animation:bloom .9s .3s cubic-bezier(.3,1.5,.6,1) both}
+@keyframes bloom{from{transform:scale(.1);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.saltire,.thistle .bloom{animation:none}.nessie{display:none}}
+@media print{.nessie{display:none}}
+.also-opt{font-size:.9rem;color:var(--muted);display:flex;gap:8px;align-items:center}
+.also-opt input{accent-color:var(--accent);width:16px;height:16px}
+.badge-also{color:var(--btn-ink)!important;background:var(--btn)!important;font:600 .72rem var(--f-body);letter-spacing:.03em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:1px 9px}
+.sess.also .why{border-left-color:var(--loch)}
+.why{font-size:.92rem;margin-top:5px;padding-left:10px;border-left:2px solid var(--accent)}
+.alts{margin-top:6px;font-size:.86rem}
+.alts summary{cursor:pointer;color:var(--muted)}
+.alts ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
+.alts li{display:flex;gap:8px;align-items:baseline;justify-content:space-between}
+.alts li span{min-width:0}
+.linkbtn{font:inherit;font-size:.82rem;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;white-space:nowrap}
+.remove{float:right;margin-left:8px}
+.empty{color:var(--muted);padding:12px 0}
+.agent{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:10px}
+pre.prompt{white-space:pre-wrap;font:500 .8rem/1.5 var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0;max-height:220px;overflow:auto}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:.6rem 0}
+select,input[type=search]{font:inherit;font-size:.92rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;max-width:100%}
+input[type=search]{flex:1 1 200px}
+.keybox summary{cursor:pointer;font-size:.9rem;color:var(--muted)}
+input[type=password]{font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;flex:1 1 220px;min-width:0}
+.count{font-size:.85rem;color:var(--muted)}
+.browse .slot{grid-template-columns:110px 1fr}
+footer{margin-top:3rem;font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:520px){.slot,.browse .slot{grid-template-columns:1fr;gap:2px}}
+@media (prefers-reduced-motion:no-preference){.sess{animation:in .25s ease-out both}@keyframes in{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}}
+</style>
+
+<header class="band"><div class="inner">
+    <a class="logo" href="https://phuse.global/" target="_blank" rel="noopener"><img src="https://cms.phuse.global/uploads/Logo_f549db8454.svg" onerror="this.onerror=null;this.src='https://phuse.s3.eu-central-1.amazonaws.com/Assets/Logo.png'" alt="PHUSE"></a>
+    <div class="demo-flag">Unofficial tool · not an official PHUSE tool</div>
+    <div class="eyebrow">EU Connect 2026 · SEC Glasgow</div>
+    <h1>Plan your Connect</h1>
+    <p class="lede">Say what you work on or want to learn. You get a clash-free schedule across all 238 presentations, workshops, panels and posters, with a line on why each one fits.</p>
+    <div class="dates"><span>Sun 15/11</span><span>Mon 16/11</span><span>Tue 17/11</span><span>Wed 18/11</span></div>
+</div></header>
+<div class="wrap">
+
+  <div class="composer">
+    <label class="q" for="q">What are you interested in?</label>
+    <textarea id="q" placeholder="For example: I'm a statistical programmer, comfortable with SDTM and ADaM. I want to learn how teams are using AI and what's new in real-world evidence."></textarea>
+    <p class="tip">Best results come from saying <b>your role</b>, <b>what you already know well</b> and <b>what you want to learn</b>. Try an example:</p>
+    <div class="examples" id="chips"></div>
+    <details class="helper" id="helper">
+      <summary>Help me write it</summary>
+      <div class="helpgrid">
+        <label for="hRole">My role</label><input id="hRole" type="text" placeholder="e.g. senior statistical programmer at a CRO">
+        <label for="hKnow">I already know well</label><input id="hKnow" type="text" placeholder="e.g. SAS, SDTM and ADaM">
+        <label for="hLearn">I want to learn about</label><input id="hLearn" type="text" placeholder="e.g. R, AI agents and real-world evidence">
+      </div>
+      <button class="btn small" id="hUse" type="button">Use this</button>
+    </details>
+    <div class="row">
+      <button class="btn primary" id="goClaude" hidden>Build my programme</button>
+      <button class="btn" id="goQuick">Quick match</button>
+      <span class="hint" id="engineHint">Quick match runs in your browser using topic tags.</span>
+    </div>
+    <label class="also-opt"><input type="checkbox" id="alsoOn" checked> Add a few <b>You may also like</b> sessions from outside my usual topics</label>
+    <details class="keybox" id="keyBox" hidden>
+      <summary>AI planning: add an API key</summary>
+      <div class="row" style="margin-top:8px">
+        <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-..." aria-label="Anthropic API key">
+        <button class="btn small" id="saveKey" type="button">Use key</button>
+        <button class="btn small" id="clearKey" type="button">Forget</button>
+      </div>
+      <p class="hint" style="margin:6px 0 0">Your key stays in this browser tab and is sent only to the AI provider's API. It is cleared when you close the tab. Each plan costs a few pence.</p>
+    </details>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <section id="planSec" aria-labelledby="planH" hidden>
+    <div class="planhead">
+      <div>
+        <div class="tag-example" id="exampleFlag">Example plan</div>
+        <h2 id="planH">Your programme</h2>
+      </div>
+      <div class="row">
+        <div class="seg" role="group" aria-label="View"><button type="button" id="vList" aria-pressed="true">List</button><button type="button" id="vTlf" aria-pressed="false">TLF view</button></div>
+        <button class="btn small" id="pdf" hidden>Download PDF</button>
+        <button class="btn small" id="share" hidden>Copy link</button>
+        <button class="btn small" id="copyPlan">Copy as text</button>
+      </div>
+    </div>
+    <div class="loader" id="loader" hidden>
+      <div class="loadart">
+        <svg id="subway" viewBox="0 0 200 140" role="img" aria-label="Glasgow Subway map with a train going round the Outer Circle">
+          <rect x="0" y="62" width="200" height="16" fill="var(--line)"/>
+          <text x="100" y="73.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--muted)" font-family="var(--f-body)">River Clyde</text>
+          <path id="loopPath" d="M60 26 H140 A44 44 0 0 1 140 114 H60 A44 44 0 0 1 60 26 Z" fill="none" stroke="#f26722" stroke-width="8"/>
+          <path d="M60 34 H140 A36 36 0 0 1 140 106 H60 A36 36 0 0 1 60 34 Z" fill="none" stroke="#2b3044" stroke-width="8"/>
+          <g fill="#fff"><circle cx="72.9" cy="34.0" r="3.2"/><circle cx="98.6" cy="34.0" r="3.2"/><circle cx="124.4" cy="34.0" r="3.2"/><circle cx="150.0" cy="35.4" r="3.2"/><circle cx="170.2" cy="50.4" r="3.2"/><circle cx="175.6" cy="75.0" r="3.2"/><circle cx="163.6" cy="97.2" r="3.2"/><circle cx="140.0" cy="106.0" r="3.2"/><circle cx="114.3" cy="106.0" r="3.2"/><circle cx="88.5" cy="106.0" r="3.2"/><circle cx="62.8" cy="106.0" r="3.2"/><circle cx="38.5" cy="98.9" r="3.2"/><circle cx="24.8" cy="77.8" r="3.2"/><circle cx="28.4" cy="52.8" r="3.2"/><circle cx="47.4" cy="36.3" r="3.2"/></g>
+        </svg>
+        <div class="trainlayer" aria-hidden="true"><div class="trainbox"><svg viewBox="-14 -6 29 12"><rect x="-13" y="-4.5" width="12" height="9" rx="2" fill="#f26722" stroke="#fff" stroke-width="1.2"/><path d="M0 -4.5 H9 C12 -4.5 14 -2 14 0 C14 2 12 4.5 9 4.5 H0 Z" fill="#f26722" stroke="#fff" stroke-width="1.2"/><path d="M9.5 -2.5 C11.5 -2 12.5 -1 12.7 0 C12.5 1 11.5 2 9.5 2.5 Z" fill="#cfe3ff"/></svg></div></div>
+        <svg id="duke" viewBox="0 0 200 175" role="img" aria-label="Duke of Wellington statue on horseback with a traffic cone on his head" hidden>
+          <g fill="var(--bronze)" stroke="var(--bronze)">
+            <rect x="30" y="150" width="150" height="7" rx="1" fill="var(--muted)" opacity=".6" stroke="none"/>
+            <rect x="38" y="157" width="134" height="15" rx="2" fill="var(--muted)" opacity=".4" stroke="none"/>
+            <path stroke="none" d="M58 80 C70 74 95 76 108 76 C116 70 126 56 134 46 L136 39 L139 45 L142 40 L143 47 C150 52 158 62 164 70 C167 74 163 79 158 78 C152 75 148 72 144 71 C140 77 136 87 131 96 C128 104 124 106 118 106 L70 106 C60 106 54 98 54 90 C54 86 55 82 58 80 Z"/>
+            <path fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M121 103 L123 126 L121 147 M111 103 L109 126 L111 147 M70 101 L66 124 L70 147 M61 99 L58 124 L58 147"/>
+            <path fill="none" stroke-width="5" stroke-linecap="round" d="M56 86 C45 92 41 110 46 128"/>
+            <path stroke="none" d="M84 80 L88 55 C89 48 105 48 106 55 L109 80 Z"/>
+            <path stroke="none" d="M86 72 C79 78 76 86 78 92 L95 84 Z"/>
+            <rect x="94" y="44" width="6" height="6" stroke="none"/>
+            <path fill="none" stroke="var(--surface)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".55" d="M104 86 L110 92 L106 112"/>
+            <path fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" d="M97 78 L110 92 L106 112"/>
+            <path stroke="none" d="M102 108 C106 107 111 108 115 113 L102 114 Z"/>
+            <path fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M102 56 L109 70 L122 66"/>
+            <circle cx="97" cy="39" r="7.5" stroke="none"/>
+            <path fill="none" stroke-width="1.5" stroke-linecap="round" d="M122 66 C135 70 148 72 158 74"/>
+          </g>
+          <g class="cone"><g transform="rotate(-8 97 32)"><path d="M97 0 L88 30 L106 30 Z" fill="#f26722"/><rect x="92" y="12" width="10" height="3.5" fill="#fff"/><rect x="90.5" y="20" width="13" height="3.5" fill="#fff"/><rect x="85" y="29" width="24" height="4" rx="1" fill="#2e7d5b"/></g></g>
+        </svg>
+      </div>
+      <div>
+        <ol class="stops" id="stops"><li>Your interests</li><li>238 sessions</li><li>No clashes</li><li>Your programme</li></ol>
+        <div class="loadcap" id="loadcap"></div>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div id="plan"></div>
+  </section>
+
+
+
+
+
+  <footer>Unofficial tool, not run or endorsed by PHUSE. Planner for PHUSE EU Connect 2026. Session titles, times, rooms and speakers come from the public agenda as published on 30 October 2026; topic tags and short summaries were written from the abstracts. Hover over a title to see its summary. Always check the official agenda and app for changes. Use “Find on PHUSE agenda” and search for the paper code to see the full abstract.</footer>
+</div>
+
+<script>
+const DATA = {"tags":["R","Python","Shiny","Open source","GxP / compliance","Validation / QC","AI / LLMs","Agentic AI","CDISC","ADaM","Data engineering","Automation","Governance / strategy","SDTM","Define-XML","USDM / digital protocol","Metadata","Regulatory submission","Package validation / risk","Data visualisation","Leadership / careers","Quarto / reporting","Safety","ARS / ARD","Data management / EDC","SAS","pharmaverse / admiral","RWE / RWD","Data transparency / privacy","HTA / market access","Cloud / platforms","Training / upskilling","Digital health / wearables","SEND / nonclinical","Oncology","Statistics / estimands","RAG / retrieval","Machine learning"],"s":[["99dfc304-967b-4562-b3fb-0964cad1c6bd",15,"14:30","16:00","","Hands-on Workshops","Boisdale 1","","Posit","Agentic AI in Clinical Programming: Separating Hype from Production-Ready Practice with R/Python","Phil Bowsher · Posit",[0,1,2,3,4,5,6,7,8,9,10,11,12],"Hands-on look at which AI coding practices are ready for regulated work today, using Positron to keep programmers in control and outputs traceable."],["82ec7906-bba2-4575-9912-71cb81bf628b",15,"14:30","16:00","","Hands-on Workshops","Alsh 1","","TransCelerate","From Schedule of Activities to Define.xml: Automating the Pathway from Design to Submission","Berber Snoeijer · ClinLine · John Owen · CDISC · Belinda Griffin · TransCelerate",[6,8,11,13,14,15,16,17],"Shows how USDM and Biomedical Concepts can carry a study design from protocol and schedule of activities all the way through to define.xml."],["f4716b1f-f8be-4c87-a8da-563879ecec3b",15,"14:30","16:00","","Hands-on Workshops","Boisdale 2","","","QC Workflow in the AI-enabled Open World","Deepak Pandarivasagan · AstraZeneca · Sireesha Krosuri · Ephicacy · Korak Datta · Caroline Phares · Siemens · Matthew Tendler · Domino Data Lab · Elsa Lozachmeur · Viatris Innovation",[3,4,5,6,11,17,18,19],"Group exercises on modernising QC beyond blanket double programming, covering risk-based approaches for AI, open source and global teams."],["",16,"09:00","10:30","","Keynote","Lomond Auditorium","","","Leadership Under Pressure, Resilience Through Setbacks, and the Ability To Inspire Teams When It Matters Most Are Challenges That Define High-Performing Organisations","Gary McAllister · Former Scotland captain",[12,20],"Former Scotland captain Gary McAllister on leading under pressure, bouncing back from setbacks and inspiring a team when it matters most."],["0a7599a8-cbf4-4944-816c-c69a63fb8c2c",16,"11:00","11:30","DH01","Data Handling & Data Engineering","Dochart 2","I","","Clinical Data as a Product: Beyond SDTM and ADaM, Towards an AI-Ready Data Foundation","Aga Rasinska · Atorus Research · Louis Groombridge-Wright · Jazz Pharmaceuticals",[6,7,9,10,13,14,17],"Argues for treating clinical data as reusable products rather than submission outputs, with an agent-driven pipeline that serves analysts, models and AI."],["44a87aa5-942d-4f21-ad14-beac43030715",16,"11:00","11:30","DS01","Data Standards & Governance","Carron 1","I","","CDISC 360i Phase 2: Learning by Doing in Digital Standards Innovation","Peter Van Reusel · CDISC",[8,11,14,15,23,24],"What CDISC learned from 360i Phase 2, its hands-on programme for testing emerging digital standards in realistic end-to-end scenarios."],["edb2e7c1-150d-4bcb-90c5-39f42942e26b",16,"11:00","11:30","DV01","Data Visualisation","Carron 2","I","","Beyond Standard Summaries: Evaluating and Visualizing the Impact of Information Loss in Clinical Trial Adverse Event Reporting","Viola Schenk · Otto-Friedrich University of Bamberg",[17,19,21,22],"Measures how much safety information standard AE tables lose through thresholds and grouping, and tests visual alternatives that keep more of it."],["b449a72a-5247-4ade-afbf-097eb858754e",16,"11:00","11:30","ET08","Emerging Trends & Innovation","Alsh 2","I","","Shiny App Validation for GxP: Practical Challenges, Operational Patterns, and Next-Generation Tooling","Vedha Viyash Venkatesan · Appsilon · André Veríssimo",[0,2,3,4,5,11,17,18,19,25,26],"How to validate Shiny apps for regulated use, with working patterns for app teams and QA and a look at newer tooling."],["737dc4ad-ba53-4830-be9d-57705e6225e4",16,"11:00","12:30","","Hands-on Workshops","M2-4","","SAS","From SAS Code to CDISC Lineage: Building Transparent and Auditable Workflows","Daniel Christen · SAS · Jim Box · David Weik",[5,8,10,11,12,17,19,25,27,28],"Workshop building a web app that turns SAS programs into lineage diagrams, making complex workflows easier to understand, document and audit."],["ead40f08-5e0f-4d46-b1ae-a8b2bb5fb21d",16,"11:00","11:30","ML05","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Decompose, Group, or Route? Strategies to Optimize LLM-Based Extraction in Literature Reviews","Ioannis Reklos · IQVIA · Theodora Oikonomidi",[6,10,11,21],"Compares ways of splitting LLM extraction tasks for literature reviews, and what improved accuracy on complex variables and messy documents."],["b16553de-504d-4607-adbf-987fb3946b13",16,"11:00","11:30","OS01","Open Source Technologies","Dochart 1","I","","Pinned, Approved, Audit-Ready: A Governance Framework for R and Python Package Management in GxP Statistical Programming","Doug Kelkhoff · Domino Data Lab",[0,1,3,4,12,17,18,25],"A practical framework for pinning, approving and auditing R and Python package versions in GxP, including different versions running side by side."],["b269170b-cf3c-4d53-953b-b9a6c1c9a169",16,"11:00","12:30","","Professional Development","Boisdale 1","","","Trust, Not Templates: Rethinking Partnerships Through a Professional Development Lens","Brad Groves · NICE · Adam Linney · Christiana Ogunbote · MHRA",[17,19,20,29],"Panel and discussion with NICE and MHRA speakers on the people skills that make partnerships across industry, HTA and regulators actually work."],["5a5a4a61-751a-40df-91df-4ce0367d1f26",16,"11:30","12:00","DH03","Data Handling & Data Engineering","Dochart 2","I","","Floating in Time: Explore the Data Pooling Time Machine","Dana Vinzelberg · Bayer · Lutz Hoffmann",[16,25],"Bayer's SAS macro system for managing data pools over time, letting you rebuild any earlier state of a pool as studies and terminology change."],["1283d830-21b0-4950-a828-33a019db1b95",16,"11:30","12:00","DS02","Data Standards & Governance","Carron 1","I","","Analysis Concepts: Towards a Executable Statistical Analysis Plan - Approach, Theory and Design","Edwin van Stein · CDISC",[8,11,15,23],"Introduces the electronic SAP: a machine-readable analysis plan built from CDISC Analysis Concepts and linked to the protocol through USDM."],["36421d7a-0ebd-45d7-b211-bcf6c82e070a",16,"11:30","12:00","DV08","Data Visualisation","Carron 2","I","","Making Virtual Controls Visible: Visual Analytics for Fit-for-Purpose VCG Review in Toxicology","Madhulika Mishra · Labcorp",[0,2,16,19,27,33],"Visualisations for judging whether virtual control groups built from historical SEND data are fit for purpose in toxicology studies."],["28fd5aa2-9ea5-4235-a143-8890e76640c7",16,"11:30","12:00","ET06","Emerging Trends & Innovation","Alsh 2","B","","From Confusion to Compliance: Lessons From Establishing In-House GxP-Compliant Imaging Analysis Workflows","Søren Asp Fuglsang · Novo · Angelika Błaszczak-Humaj · Addie Nina Olsen · Adrian Czaban · Dr Andreas Heindl · Daniel Michelsanti · Jürgen Herp · Majd Zreik · Mateusz Cezary Florkow · Oskar Hint · Bjarne Hansen",[4,5,8,13,17,32],"Lessons from setting up in-house, GxP-compliant imaging analysis rather than relying on vendors, including validation of non-standard tools."],["b5defd5d-94c8-4318-b7f4-c5d89984880f",16,"11:30","12:00","ML02","Machine Learning, AI & Large Language Models","Boisdale 2","B","","Who Checks the AI? Making AI Generated Analyses Auditable","Tomás Sabat Stöfsel · Verisian",[5,6,11,12,17,19,34],"Why AI-generated code can look right but be wrong, and a graph-based traceability approach that links data, specs, code and outputs."],["ca52640a-6c52-4fb3-b29b-1c7ab53af9f9",16,"11:30","12:00","OS02","Open Source Technologies","Dochart 1","I","","Enable Biometrics to utilise R/Open-Source as a tool for both exploratory and regulatory activities for drug projects","Mariusz Zieba · AstraZeneca",[0,2,3,4,5,10,11,13,17,21,22,25,30,31],"AstraZeneca's risk-based process for bringing R into GxP reporting, from package requests and risk scoring to an approved, auditable package stack."],["b7c1ea08-d712-451e-be12-654d120f75e1",16,"12:00","12:30","DH11","Data Handling & Data Engineering","Dochart 2","","","LIBNAME Is Great — But What About the {REST}?","Stine Winkler Bertelsen · Novo · Anja Jazbec",[10,11,12,17,25,30],"Novo Nordisk on connecting SAS Viya, Databricks and other systems in a multi-platform SCE, using both LIBNAME and REST APIs."],["f9a78ae4-2a23-40d9-a5c1-8a6faaf8c8a6",16,"12:00","12:30","DS03","Data Standards & Governance","Carron 1","A","","Analysis Concepts: From Specification to Output - Building and Executing an eSAP in Practice","Kirsten Langendorf · data4knowledge",[8,9,11,15,16,23],"Live demo building an electronic SAP from a protocol and using it to generate analysis datasets and results without re-specifying in code."],["e0101edc-1d20-40cd-92f1-b59a40135737",16,"12:00","12:30","DV03","Data Visualisation","Carron 2","I","","Accelerating Study Insights: Agile Data Visualisation Using R-Shiny","Mr Thomas Hanigan · Astellas Pharma",[0,2,9,12,13,19,21,22,24],"An R Shiny app that turns raw efficacy data into interactive waterfall, spider, swimmer and KM plots for quick review by study teams."],["5dc9858d-9f8d-424a-9dc7-9bde3f01fd59",16,"12:00","12:30","ET17","Emerging Trends & Innovation","Alsh 2","A","","Reengineering Standard Programs and Study Setup to Support the Adoption of a New GxP Compliant Statistical Computing Environment","UCB Biosciences",[4,17,20,30],"UCB on redesigning standard programs and study setup to fit a new GxP statistical computing environment rather than lifting and shifting."],["a6eec984-b26b-4964-a288-10e226bb4f2e",16,"12:00","12:30","ML03","Machine Learning, AI & Large Language Models","Boisdale 2","B","","A Skeptic's Guide to Using AI for Programming - Updated","Frank Menius · Atorus Research",[6],"A sceptic's practical guide to using AI for programming safely, without losing skills, productivity or data integrity along the way."],["8d5de9f4-3ec8-42b7-8164-6cc83e212c6e",16,"12:00","12:30","OS03","Open Source Technologies","Dochart 1","I","","R Ready, Open-Source Ready, AI Ready: Building a Validated Foundation for Agentic Analytics","John Monaghan · IQVIA",[0,1,3,5,6,7,17,18,31],"IQVIA's validated R framework used for client submissions, and how it also prepares the ground for AI and agentic analytics."],["81e24662-945a-4538-a5ef-e51326b361f9",16,"13:30","14:00","DH02","Data Handling & Data Engineering","Dochart 2","I","","Engineering Metadata-Driven Blinding in Clinical Data Pipelines: The Novo Nordisk Approach to Scalable, Automated Data Protection","Julie Winkel Missel · Novo · Vicky Poulsen",[4,5,10,11,12,16,24],"Novo Nordisk's metadata-driven approach to blinding, building automated, consistent data protection directly into clinical data pipelines."],["0453df2e-480b-4bd4-8123-62465bbbabf7",16,"13:30","14:00","DS04","Data Standards & Governance","Carron 1","B","","Associated Persons in an ADaM Library","Jessica Whittaker-Dixon · Chiesi",[9,13],"How Chiesi added Associated Persons data to its standard ADaM library for neonatology studies, and the design choices involved."],["0ec5025e-5e45-4431-ad74-fdb5e55fd15b",16,"13:30","14:00","DV04","Data Visualisation","Carron 2","B","","Automatic Generation of Dashboards","David Weik · SAS",[10,11,19,25],"Using SAS Viya REST APIs wrapped in a simple Custom Step to reuse Visual Analytics reports automatically on new data."],["2df0ab22-734e-4185-ae4b-8847e18bfceb",16,"13:30","14:00","ET11","Emerging Trends & Innovation","Alsh 2","I","","Practical AI in Clinical Trial Biometrics: Why Metadata and Standards Matter","Kevin Burges · Veramed",[6,7,8,15,16],"Why AI in biometrics needs grounding in standards and controlled metadata to be reliable, with practical approaches for regulated work."],["9547f327-e8ac-42d3-a940-3fbaa1f54b45",16,"13:30","15:00","","Hands-on Workshops","M2-4","","Certara","The Metadata Mystery: Solving the Case From Protocol to Submission","Martin Johnston · Certara · Julie Ann Hood · Wendy Young · Erin Erginer · Kristin Kelly · Jen Manzi · Seiko Yamazaki",[5,16,17,19],"A team detective game working through realistic study documents to find where metadata problems start and how to prevent them."],["8640f441-5e8c-45b8-9504-f43f9f953eef",16,"13:30","14:30","","Machine Learning, AI & Large Language Models","","","","Gen AI in Statistical Programming: EU Connect 2026 Edition","Bhavin Busa · Clymb Clinical",[6,12,19],"Interactive session with live polling on how generative AI is being adopted in statistical programming, its challenges and its governance."],["a6aa2b91-85d2-432e-bd99-d04bf8bdc580",16,"13:30","14:00","PD08","Professional Development","Boisdale 1","I","","From Programmer to Associate Director: What Changed, What Worked, and Why It Matters","Melanie McGuigan · Phastar",[20],"A personal account of moving from programmer to associate director, what changed and what helped when leading people for the first time."],["cd71eb81-2db7-4f40-8eee-af54f25fbee0",16,"13:30","14:00","SM01","Scripts, Macros & Automation","Dochart 1","B","","Automating Teal App Development in Clinical Trials: What Works in Practice","Oriol Senan Campos · Appsilon",[2,3,6,7,11],"Practical findings from automating teal app development and maintenance with LLMs and the Teal MCP server across dozens of modules."],["e13bd0be-f46c-4f03-a94f-2fdce2264b76",16,"13:30","14:00","SA06","Submissions & Agencies","Alsh 1","I","","Advancing Global Regulatory Submissions through Next Generation Submission (NGS): A Collaborative Implementation Case Study","Carrie Zhang · ClinChoice · Tom Ward · AstraZeneca",[4,8,11,12,17,22],"A CRO and sponsor case study on Next Generation Submission practices that shorten timelines, from pre-lock planning to dress rehearsals."],["2c720327-4e54-42f3-8384-3dacebef8ce3",16,"14:00","14:30","DH05","Data Handling & Data Engineering","Dochart 2","I","","Integrated Safety Data Platforms: Building and Governing a Direct-to-ADaM Pooled Clinical Database for Real-Time Safety Surveillance","Mr Sunil Ganeshna · Astellas",[4,9,11,12,17,21,22,30],"A playbook for a governed, pooled ADaM safety database that supports near real-time surveillance, DSURs and integrated safety summaries."],["1c8288b5-1234-4c2c-b40f-200b40730f24",16,"14:00","14:30","DS05","Data Standards & Governance","Carron 1","I","","Visualizing ICE Strategies in ADaM: Making Estimands Accessible","Yash Patel · Cliantha Research",[8,9,16,17,19,35],"Practical ways to map intercurrent event strategies into ADaM, with reusable code and visuals that make estimands easier to explain."],["e03d5750-4c53-49a2-b24d-bfb2de632610",16,"14:00","14:30","DV07","Data Visualisation","Carron 2","I","","Flex It: Using R Flexdashboard to Deliver an Interactive, Dynamic Dashboard Displaying TLFs for Stakeholders","Matt Gale · MSD",[0,19,21],"Using R Flexdashboard to turn static TLF reports into interactive HTML dashboards that bring several studies together."],["5197fc7c-d97e-47a3-a4bc-4435946def93",16,"14:00","14:30","ET09","Emerging Trends & Innovation","Alsh 2","I","","The Metadata Trap: Why Current Automation Approaches Are Failing Statistical Programming Teams","Richardus Vonk · Strategic Advisor · Verisian",[5,9,11,13,14,16,17,21],"Argues that automation fails when specs and define.xml are trusted blindly, and shows why checking these documents for consistency matters."],["18abcb9f-866a-4b44-b4e9-d67542863271",16,"14:00","14:30","PD03","Professional Development","Boisdale 1","I","","Training the Future Workforce: Adapting Learning Strategies for Gen Z and Emerging Professionals","Arman Melkonyan · STATECS · Mariam Malkhasyan",[17,19,20,22,31],"How training for statistical programmers can adapt to Gen Z and new joiners, with more interactive, feedback-driven learning."],["846c0064-4daa-4253-b26e-81d19694d978",16,"14:00","14:30","SM02","Scripts, Macros & Automation","Dochart 1","I","","A Framework for Large-Scale Automated Harmonisation","Tamara Senior · Roche",[0,10,11,13,16],"Roche's highly automated R-based approach to harmonising SDTM data at scale for pooled data marts and secondary use."],["fb5c0283-19fe-487b-b2a7-e1e926ff2e3c",16,"14:00","14:30","SA05","Submissions & Agencies","Alsh 1","I","","Bridging CDISC Standards and HIV-1 Regulatory Expectations: Practical Virology Data Implementation","Ninan M Luke",[4,8,9,17],"Meeting FDA expectations for HIV-1 submissions on top of CDISC standards, focusing on the virology outcomes dataset ADEFFOUT."],["8556f016-8b45-4e02-bc2f-8db010dbefe2",16,"14:30","15:00","DH06","Data Handling & Data Engineering","Dochart 2","I","","Faster, Semi-Automatic Data Transfer Validation Through Machine-Readable DTAs","Agnieszka Bel · SGS Pharma Clinical Research",[4,5,11,12,28],"SGS turned Word data transfer agreements into machine-readable Excel with rule checks, making incoming data validation largely automatic."],["56a65aea-a36d-4045-9b2b-fece54708e9b",16,"14:30","15:00","DS06","Data Standards & Governance","Carron 1","I","","Open-Source R Tooling for CDISC's Analysis Results Standard (ARS)","Steffen Falgreen Larsen · Novo · Kristian Trøjelsgaard",[0,3,8,14,16,17,19,23],"smartARS, an open-source R toolkit for CDISC's Analysis Results Standard, producing reusable ARDs and auto-populated define.xml."],["af680fec-cde4-4719-91a6-73c1ccd29c25",16,"14:30","15:00","DV06","Data Visualisation","Carron 2","I","","Validating R Shiny Applications for Data Driven Decision Making: A DaVinci Case Study","Korbinian Matthias · Boehringer Ingelheim · Fabian Roethleithner",[0,2,5,18,19],"Boehringer's approach to validating Shiny apps built on its DaVinci framework so results can support decisions, not just exploration."],["0457be11-f43f-4cf9-89d6-900e3dbb1c6b",16,"14:30","15:00","ET15","Emerging Trends & Innovation","Alsh 2","I","","Open Source & AI Readiness in Clinical Biometrics: A Pulse Check on Pharma","Caroline Phares · Siemens · Olga Mierzwa-Sulima · Appsilon",[0,3,5,6,11,18,24,25,26,27,30],"Findings from interviews with biometrics leaders on how far pharma has got with open source, SAS-to-R moves and AI readiness."],["69581b56-9500-4c29-85fd-abf37e0f0c23",16,"14:30","15:00","ML04","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Agentic AI for SDTM Mapping, Promise vs. Reality","Deepak Ananthan · Zifo RnD Solutions · Shivoy Pandita · Entimo",[4,5,6,7,8,11,12,13,14,18,27],"An honest, hands-on evaluation of agentic AI for SDTM mapping: where it delivers and where expert oversight is still essential."],["43b1265b-56bf-40ab-b106-0b661fefd5f5",16,"14:30","15:00","PD04","Professional Development","Boisdale 1","B","","Will AI Make Clinical Programming a Less Attractive Career? Rethinking How We Adopt AI to Retain and Attract Talent","Damian Wierzbicki · Phastar",[6,17,20,24],"Asks how AI adoption could make clinical programming less appealing as a career, and how to adopt it while keeping and attracting talent."],["b6c61d3e-7ee1-4414-b436-973b901a4c8f",16,"14:30","15:00","SM03","Scripts, Macros & Automation","Dochart 1","I","","From Summary Tables to Patient-Level Analytics: A Standardized R and SAS Framework","Endri Elnadav · EE Analysis",[0,17,21,22,25,37],"R functions and SAS macros that produce a subject-level dataset alongside each summary table, so every count traces back to patients."],["b69a1ea5-51c7-48fe-afc1-99fc230711d2",16,"14:30","15:00","SA08","Submissions & Agencies","Alsh 1","I","","Conflict & Convergence for Accelerated Disclosure of Clinical Documents","Honz Slipka · Veristat",[4,17,27,28,36],"Why late-stage anonymisation causes repeated rework in clinical document disclosure, and how planning transparency earlier helps."],["8535bf22-4b05-48fa-b9ae-621803c09660",16,"15:00","15:30","DH10","Data Handling & Data Engineering","Dochart 2","I","","Accelerating Regulatory Responses Through a Harmonized Clinical Data Warehouse","Silvia Faini · Cytel · Magalie Gallet",[8,12,13,17,22],"Cytel's experience building a flexible integrated database mixing interventional and non-interventional studies for safety and regulatory questions."],["c3834b9e-0528-4984-b20e-d842c8182e86",16,"15:00","15:30","DS07","Data Standards & Governance","Carron 1","I","","Rethinking QC: Utilising ARS for ARD-based validation","Malan Bosman · Clymb Clinical",[0,3,4,5,8,11,12,16,23],"Using CDISC ARS and Analysis Results Datasets as the basis for QC, comparing results data rather than finished tables."],["9aa231d5-dbd3-4ac6-9c65-ff3c7fda3547",16,"15:00","15:30","DV05","Data Visualisation","Carron 2","B","","R-Evolutionising Medical Data Review in Neuroscience Through {teal}","Dr. Magdalena Krochmal · Roche · Natalja Nassonova",[0,2,3,4,16,19,22,28,30],"Roche replaced a proprietary medical data review tool with a modular open-source {teal} app for a Huntington's disease study."],["a4c2ec02-39a6-45f4-8cb9-9031efafa456",16,"15:00","15:30","ET13","Emerging Trends & Innovation","Alsh 2","B","","Trust the Agent? Building Confidence in Agentic AI for Regulated Clinical Programming","Jean Muller · MSD · Maciej Wojtecki-Glod",[0,3,5,6,7,10,11,25],"MSD's experience using multiple coordinated AI agents to migrate a validated SAS codebase to R, and how they kept it trustworthy."],["20a84459-2ad8-42b9-89a3-104a0e58c9be",16,"15:00","15:30","ML01","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Who Authorised That? Enforcing Governance in Multi-Agent AI Pipelines","Kristian Debus · EQTY Lab",[4,5,6,7,10,12,17,21],"Governance for multi-agent AI pipelines: how to enforce and record that each agent followed its rules, not just state them in prompts."],["1549837a-d65f-42cc-950a-b72f7c264b84",16,"15:00","15:30","PD05","Professional Development","Boisdale 1","B","","Am I the Imposter?","David Meek · Plus-Project",[0,20,25],"An honest look at imposter syndrome from 20 years in CRO programming, and how self-doubt can sit alongside a long, successful career."],["766eb9e3-d684-4682-a4ae-384bc36997dc",16,"15:00","15:30","SM04","Scripts, Macros & Automation","Dochart 1","B","","Efficient and Reproducible Literature Processing for HTA Evidence Synthesis","Minjae Ok · mainanalytics",[6,29,36],"A scripted, reproducible workflow for cutting down the large, noisy literature sets that AI search returns for HTA systematic reviews."],["da3626b6-42a0-4675-8c80-8a4842f170e5",16,"15:00","15:30","SA09","Submissions & Agencies","Alsh 1","I","","Beyond the CRT Package Preparing Clinical Programmers for True Submission Readiness","Mr Pavan Kumar KP · Novartis",[5,6,9,13,14,17,24],"Why delivering the CRT package isn't the same as being submission-ready, and how programmers can better support health authority questions."],["fdab4dc2-080e-40f0-b7c4-1dd221dfd292",16,"16:00","16:30","DH08","Data Handling & Data Engineering","Dochart 2","B","","How to Migrate Without Migrating","Kaj Hejlesen · Novo · Dr Sophie Hytteballe · Devote Consulting",[10,25,30],"How Novo Nordisk moved 130TB from a legacy SCE to Databricks without a classic migration, keeping all old data accessible."],["83708eed-8c37-4188-9fee-cdba35a2200e",16,"16:00","16:30","DS08","Data Standards & Governance","Carron 1","I","","SDTMIG v4.0: Are You Ready For It?","Kristin Kelly · Certara",[8,13,16,17],"What's coming in SDTMIG v4.0, including multiple subject instances and non-standard variables replacing SUPPQUAL, and how to prepare."],["147ef63f-c102-4e03-9179-060697705bc3",16,"16:00","16:30","ET14","Emerging Trends & Innovation","Alsh 2","I","","Open-Source AI Pit of Success: Governance Within the ACE (AI Statistical Environment)","Phil Bowsher · Posit",[0,3,6,7,12,21,30],"Posit on moving from a statistical computing environment to one with governed AI built in for open-source users."],["803c313b-e6d1-4fa5-9551-0cd1a0bc9c4b",16,"16:00","17:30","","Hands-on Workshops","M2-4","","TrialAssure","Redact, Protect, Disclose: A Practical Workshop on Clinical Document Anonymisation Under EU CTR","James Greene · TrialAssure · Zach Weingarden",[4,17,28,30],"Workshop on anonymising clinical documents for CTIS under EU CTR, balancing confidentiality against over-redaction."],["d1d0c3f7-485e-4d1e-a5a8-de5e69b79573",16,"16:00","16:30","ML06","Machine Learning, AI & Large Language Models","Boisdale 2","A","","Give Your AI Coding Assistant a Live R Session: From Iterative Exploration to Reproducible ADaM Analysis","Vladimir Obucina · Novo",[0,3,6,7,8,9,26],"Gives an AI coding assistant a live R session through MCP, so iterative ADaM analysis keeps its state instead of rebuilding every step."],["7bd6666e-8fc2-4b15-883c-2891abc1e09e",16,"16:00","16:30","PM09","People Leadership & Management","Carron 2","I","","Delegation: The Art of Letting Go Without Losing Control in High-Stakes Teams","Wilri Mackay · IQVIA",[20],"Leading biometrics teams by delegating ownership rather than tasks, drawing on Turn the Ship Around and real experience."],["57cf70c0-54fd-485a-8765-1d995d3f7977",16,"16:00","16:30","PD06","Professional Development","Boisdale 1","B","","Beyond the Script: Why a Growth Mindset Is the Best Programming Tool","Matthew Moody · GSK",[6,10,17],"How the programmer's role is changing with new languages and AI, and why a growth mindset matters more than any single tool."],["de921d36-5b0e-41f3-a898-f0ba2eece72f",16,"16:00","16:30","SM05","Scripts, Macros & Automation","Dochart 1","I","","Cutting the Queue: How to Reduce Programming Runtimes via Parallel Processing","Mr Simon Purkess · Phastar",[9],"Cut long dataset runtimes by splitting a big study run into parallel jobs, with tips on choosing threads and handling dependencies."],["66263337-3d64-4ccb-a9c8-567c3fcd2818",16,"16:30","17:00","DH09","Data Handling & Data Engineering","Dochart 2","B","","Extracting Clinical Signals from Free-Text Patient Diaries: When Patient Expression and Emotions Are Reported as Events","Rafik Ghazaryan · BioBrain PRO",[22,27,33],"What happens when patients describe symptoms and feelings in free-text diaries, and how to turn that into structured clinical events."],["e867e1ca-6fa8-41d7-a1e7-a8cced1e348f",16,"16:30","17:00","DS09","Data Standards & Governance","Carron 1","I","","Walking the BC Journey: from Assessment Selection to Submission","Berber Snoeijer · ClinLine · Ms. Rhonda Facile",[8,11,13,14,15,16,17,24],"Following Biomedical Concepts from a central library through study design, data capture and on to submission."],["2ff8f81b-6b98-42ff-90ad-011b57ac511a",16,"16:30","17:00","ET07","Emerging Trends & Innovation","Alsh 2","I","","The Missing Foundation of Inspection-Ready Statistical Computing Environments","Menco Bakker · Validated Cloud · Jules van der Zalm · OCS Life Sciences",[4,5,17,27,30],"Why compliance gaps in servers, storage and networking undermine an SCE, and what a solid, inspection-ready foundation needs."],["be6f2c74-a43b-4136-9fe0-ff38a0c4a6a4",16,"16:30","17:00","ML07","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Coding Assistants or Autopilots? What We Learned Rolling Out AI in Data Sciences","Martin Čadek · Roche",[6,22],"Roche's lessons from rolling out AI coding assistants across a large data sciences organisation: safety issues and user pain points."],["8cba8c2a-e14d-48ce-a215-b8ed452f3b9e",16,"16:30","17:00","PM02","People Leadership & Management","Carron 2","B","","Breaking the Boom-and-Bust Cycle: How Management Can Create a Culture of Maintainable Productivity","Rees Jones · Fortrea · Florence Horspole",[20],"How managers can break the cycle of crunch and burnout in programming teams and build sustainable productivity instead."],["f26a5b46-3854-403c-90f0-3e19e687aa13",16,"16:30","17:00","PD07","Professional Development","Boisdale 1","I","","Emotional Intelligence for Technical Minds: Navigating Change, Conflict & Reinvention","Bernadette Troth · Pitstop Life",[12,17,20,31],"Emotional intelligence skills for technical people: handling change, conflict and stress in demanding delivery environments."],["c1d5da3f-e5d2-463e-bcdc-152923b1a9cd",16,"16:30","17:00","SM06","Scripts, Macros & Automation","Dochart 1","I","","Automating Submission-Ready RTF TLF Generation from ADaM: A Sponsor-Owned Macro Framework","Sojung Lim · Chong Kun Dang · Sohee Jeong",[5,9,11,17,21,25],"A sponsor-owned SAS macro framework that generates consistent, submission-ready RTF tables, listings and figures straight from ADaM."],["dba3e840-bb80-4d7d-be5e-d3f271e7ae15",16,"17:00","17:30","DH07","Data Handling & Data Engineering","Dochart 2","I","","Cross-Platform Synchronisation in a New Statistical Computing Environment: Early Data Engineering Lessons from First User Onboarding to First Study Delivery","Mina Kheirabadi · Novo · Jiayi Qin",[10,11,30,31],"Novo Nordisk's early data engineering lessons from launching a new multi-platform SCE, from first users to first study delivered."],["cff43e0a-223a-48b6-b225-070d3cbb8d0d",16,"17:00","17:30","DS10","Data Standards & Governance","Carron 1","I","","Harmonising Oncology Response Criteria: An SDTM Mapping Framework Across RECIST, RANO, Lugano, and IMWG","Ayushi Agarwal · Ephicacy",[8,13,16,17,34],"An SDTM mapping framework that handles RECIST, RANO, Lugano and IMWG oncology response criteria consistently."],["763dba22-8d00-49aa-bee7-6c7f33ce564c",16,"17:00","17:30","ET01","Emerging Trends & Innovation","Alsh 2","I","","The SCE is Dead! Long Live the SCE!","Joe Olinger · d-wise, an Instem company",[0,1,4,6,10,17,25,30],"Why the old SAS-only, validate-once SCE is over, and what replaces it: infrastructure as code, CI/CD and shared governed platforms."],["0d77ac19-9eaa-49f0-af4f-1532694d149a",16,"17:00","17:30","ML08","Machine Learning, AI & Large Language Models","Boisdale 2","B","","From Hype to Help: Everyday AI Wins","Will Greenway · Plus-Project",[6,10,31],"Practical, low-risk AI quick wins anyone can try on Monday morning, from drafting emails to understanding and debugging code."],["8ad9a630-c168-499c-a76a-b49be76f86ad",16,"17:00","17:30","PM03","People Leadership & Management","Carron 2","I","","Secure Transactions in Leadership: Creating a Workplace Where People Choose to Stay","Matthew Metherell · Phastar",[4,20,22],"Uses attachment theory and transactional analysis to explain why people stay or leave, especially in remote and hybrid teams."],["284e230b-f958-480a-909f-34c225c7a55f",16,"17:00","17:30","PD02","Professional Development","Boisdale 1","I","","Developing Tomorrow's Talent: Why Placement Programs Matter More Than Ever. Practical Lessons from Industry","Eva Weru · UCB Biosciences · Yuliana Yakouskaya",[6,10,12,20,27],"UCB on why placement programmes matter more than ever, and how students add real value while building skills."],["7ed81784-9fda-48b5-8068-711770c00e0b",16,"17:00","17:30","SM07","Scripts, Macros & Automation","Dochart 1","B","","Up and Down Branches: A GitHub-Centric, GenAI-Ready Validation Framework for SAS-to-R Transition","Simon Goffinet · GSK",[0,5,6,10,11,17,25],"GSK's GitHub-based approach to validating R functions as a package when moving trusted SAS macros to R, with AI-ready workflows."],["",17,"09:00","10:30","","Keynote","Lomond Auditorium","","","Beyond Code: Evidence Generation in an AI Era","Programming Heads Council · Sascha Ahrweiler · Bayer · Alberto Montironi · UCB Biosciences · Julia Igel · Boehringer Ingelheim",[6,12,20,31],"Programming leaders from across the industry on how AI shifts our work from writing code to generating better evidence, and what that means for skills and teams."],["3b8c8bea-13c6-4de4-8bde-a1446f3b6209",17,"11:00","12:30","CT01-03","Coding Tips & Tricks","Boisdale 2","B","","Programming Workflows: Connecting Languages","Bibas Timilsina · Parexel · Colin Gillespie · Jumping Rivers · Jim Box · SAS",[0,1,3,7,12,22,25,30],"A tips session on connecting languages in programming workflows, including Git branching for clinical programmers, SAS, R and Python."],["6228a503-6fe5-4e01-a014-7a7483f66997",17,"11:00","11:30","DS11","Data Standards & Governance","Carron 1","I","","Dataset-JSON Uncovered: Standard, FDA Pilot, Hackathons and Tooling","Katja Glaß · Katja Glass Consulting",[8,10,17,27],"An introduction to Dataset-JSON, the CDISC successor to XPT, covering the FDA pilot, hackathons and available tools."],["84e7fece-0c3f-4587-9b6e-c92d06859012",17,"11:00","11:30","ET04","Emerging Trends & Innovation","Alsh 2","B","","TrialHub: Connecting Clinical Trial Documents into a Cross-Study Knowledge Graph","John McDade · Phastar",[1,6,16,19,21,30,36],"TrialHub, a Python platform that links protocols, SAPs, specs and code into a knowledge graph you can query across studies."],["899fed60-150f-4f32-ac4a-08300d15c0a9",17,"11:00","11:30","LI01","Leadership Through Innovation","Carron 2","I","","Workforce 2030: Rewriting the Future of Statistical Programming in the AI Era","Bhavesh Patkar · Syneos Health",[6,11,12,17,20,30],"How statistical programming can move from execution to strategy as AI and automation take over routine work."],["d616b5ff-fd59-4b85-82e1-289b954624ee",17,"11:00","12:30","","People Leadership & Management","M2-4","","","What Happens When Someone Speaks Up? Building Psychological Safety in Virtual Teams","Jennifer Dootson · Lightbulb Moments",[19,20,22],"Interactive session on building psychological safety in virtual and hybrid teams so people feel able to speak up."],["cd7af6be-d50b-44c4-b569-9238080cc805",17,"11:00","11:30","RE01","Real-World Evidence","Dochart 2","I","","Improving Clinical Trial Efficiency with EDC - EHR Integration","Bhooma Sridharan · Zifo RnD Solutions",[4,11,19,24,27,34],"How linking EDC to electronic health records with FHIR and ODM cuts manual data entry and improves data quality."],["2024a11a-faac-4ded-b5b9-4c625c8c553a",17,"11:00","11:30","SM08","Scripts, Macros & Automation","Dochart 1","A","","Automated SDTM Transfer Review for ADaM and TFL Readiness","Dmitri Petratchenko · VALOS · Yauheni Kundra",[5,9,11,13,17,25],"A SAS workflow that compares successive SDTM transfers and flags what changed and what it might break in ADaM and TLFs."],["cedced90-c8ea-48cf-99f1-772662cc2d51",17,"11:00","11:30","SD01","Software Demonstrations","Boisdale 1","B","","Metadata-Driven SDTM, ADaM, and TFL Automation with Integrated Generative AI Workflows","Bhavin Busa · Clymb Clinical",[6,9,11,13,16,21],"Demo of a metadata-driven platform taking studies from SDTM mapping and SAP building to TLFs and CSR, with generative AI built in."],["698abcef-0d26-4f53-9df4-12b411a737f0",17,"11:30","12:00","DS12","Data Standards & Governance","Carron 1","I","","Evolution of the MDR: Transitioning from Static Libraries to Intelligent Knowledge Hubs","Harinarayan Gopichandran · Sycamore Informatics",[6,11,12,13,14,16,17,24,27,30],"How metadata repositories are becoming smarter, AI-assisted knowledge hubs that improve reuse and consistency across programmes."],["ebbd02d2-486c-4662-8589-805100e04227",17,"11:30","12:00","ET12","Emerging Trends & Innovation","Alsh 2","I","","In the Pipeline: Using Git to Manage a Validated Statistical Computing Environment","Paul Shannon · Katalyze Data",[4,5,10,11,17,20,28,30],"Using Git and cloud tooling to manage changes and revalidation of a validated statistical computing environment."],["5f4730f4-10b6-4079-9025-eb084a1cf522",17,"11:30","12:00","LI02","Leadership Through Innovation","Carron 2","A","","Beyond the Baseline: Helping People Discover Their Inner Outlier of Innovation","Shereen Khwajazada · Lotus Clinical Research",[20,22],"How leaders can help people find their own creative strengths and move teams from routine delivery to innovation."],["ce765fea-6e3b-4aad-b5e5-0e12cf2754e3",17,"11:30","12:00","RE02","Real-World Evidence","Dochart 2","I","","The Missing Governance Layer: Why Extending Your SCE to Real-World Evidence Is Harder Than It Looks","Ross Sharp · Domino Data Lab",[4,12,16,17,27,30],"Why extending an SCE to real-world data is harder than it looks, since observational data breaks metadata and provenance assumptions."],["5d24e6f2-69aa-4192-bcf4-1cda46170bb3",17,"11:30","12:00","SM09","Scripts, Macros & Automation","Dochart 1","I","","From Hard Coded to Automated: Unlocking TLF Efficiency with a Central Properties File","Selina Verdonschot · SGS Pharma Clinical Research",[5,11,21],"Moving TLF titles, populations and footnotes into one central properties file so they are programmed once and maintained easily."],["8c09ea2a-ad15-4cab-8d40-2d5c028a1701",17,"11:30","12:00","SD02","Software Demonstrations","Boisdale 1","B","","Beyond Autocomplete: Accelerating SAS-Language Development with the Integrated AI Copilot in Siemens Rapidminer Workbench","Andy Ratcliffe · Siemens",[6,11,12,25],"Demo of an AI copilot built into Siemens Workbench for writing SAS-language code faster and more accurately."],["b6d1fea8-b024-447a-81b1-c60c699a11ae",17,"12:00","12:15","CT04","Coding Tips & Tricks","Alsh 1","B","","AI as a Pair Tutor for Clinical Trial Programming: Prompt Patterns and Practical Guardrails for Faster Learning","Jacob Ingram-Smith · MMS Holdings",[0,1,6,10,25,31],"Using AI as a tutor that explains code and offers alternatives, to learn faster rather than to generate ready-to-run code."],["6ee1e37a-a9e6-4c27-bcad-0f834bfc692f",17,"12:00","12:30","DS13","Data Standards & Governance","Carron 1","I","","Beyond the PDF: Bringing CDISC Standards to Life","Alex Wright · Phastar",[1,6,8,9,12,13,16,19,31],"Standards-Browser, a Python web app for searching and comparing CDISC standards and controlled terminology instead of reading PDFs."],["1a93f2aa-0887-4c61-89f2-dce3d558ee40",17,"12:00","12:30","ET16","Emerging Trends & Innovation","Alsh 2","I","","Hierarchical Data Models as a Robust Core Standard Enabling Traceability, Reproducibility, and Reuse of the Analysis Results Data Layer","Barbara Doll · Boehringer Ingelheim · Dr. Chad Logan",[6,8,15,16,19,23],"Proposes storing analysis results in hierarchical models that mirror protocols and SAPs, for better traceability and reuse."],["8b824cc6-b965-4249-958f-b8d3b3996ef5",17,"12:00","12:30","LI03","Leadership Through Innovation","Carron 2","I","","From Shadow AI to Shared Capability: How Team Leads Enable Responsible Innovation in Regulated Programming","Dr Yirong Cao · Bristol Myers Squibb",[5,6,12,17,20],"A leadership model for bringing AI into submission work responsibly, replacing blanket bans and hidden shadow use."],["ae66ae32-1778-47b1-a9d5-3f83cab64d65",17,"12:00","12:30","RE03","Real-World Evidence","Dochart 2","B","","Strengthening Regulatory Benefit-Risk Decision-Making With Fit-for-Purpose RWE When RCT Evidence Is Limited","Camilla Birkegård · Novo · Lars Peter Korsholm · Tara Srouji · Cong Nguyen",[12,17,22,27,35],"Novo Nordisk case study using real-world evidence to support an EMA label update where a randomised trial wasn't feasible."],["2173d329-2fb6-4b2c-a0f4-16c0dc812a77",17,"12:00","12:30","SM10","Scripts, Macros & Automation","Dochart 1","I","","Agentic QC for R and Python in Positron","Phil Bowsher · Posit",[0,1,4,5,6,7,9,11,13,17,21,26],"AI agents working alongside the primary programmer in Positron as QC partners for SDTM, ADaM and TFL outputs."],["90841823-3f7a-4bef-96a2-e6493da3f026",17,"12:00","12:30","SD03","Software Demonstrations","Boisdale 1","B","","SAS Data Maker: AI-generated Synthetic Data for Real-World Impact","Vincent Moreau · SAS",[4,6,12,25,27,28],"Demo of SAS Data Maker, which creates realistic synthetic data that keeps statistical properties while protecting patient privacy."],["d33c846f-f14e-46b5-9cfb-f345850ae49a",17,"12:15","12:30","CT05","Coding Tips & Tricks","Alsh 1","I","","Prompting with Purpose: Agentic Coding Beyond Copy and Paste in Regulated Clinical Trials","Shipra Das Gupta · Novartis",[0,4,6,7,8,9,13,16,19,25,26],"Moving from copy and paste reuse to agentic coding with tools like GitHub Copilot, while staying standards-aware in regulated trials."],["940f11b3-c057-4025-adbc-c7f4e5f0f11a",17,"13:30","14:00","AS01","Analytics & Statistics","Carron 1","B","","A Causal inference Primer","Jim Box · SAS · Lisa Murch",[17,29],"A beginner's primer on causal inference: how causal questions differ from associations and which assumptions they rely on."],["8707c930-4a14-4b3b-88af-bedba2b33324",17,"13:30","14:00","ET10","Emerging Trends & Innovation","Alsh 2","I","","Specification-to-TLF in R: An AI-Assisted, Standards-Driven Reporting Workflow in R","Lovemore Gakava · Novartis",[0,5,6,8,11,17,21,23,26],"An AI-assisted R and pharmaverse workflow that drafts TLFs from specs and source documents, with the programmer staying in control."],["1fe00c3b-ce5d-4d5f-b240-03f96813d07a",17,"13:30","15:00","","Hands-on Workshops","M2-4","","Cytel","Token-Efficient Clinical Programming Through Hybrid Agentic AI and Rule-Based Systems","Nicolas Rouillé · Cytel · Manuel Cossio",[0,6,7,17,19,24],"Workshop on combining agentic AI with rule-based systems for clinical programming, cutting cost by using fewer AI tokens."],["8f586432-93d1-4dc8-b6a9-c3294cda0166",17,"13:30","14:00","LI04","Leadership Through Innovation","Carron 2","B","","Data Democratisation in Clinical Research: Innovation or Organised Chaos?","Eva Kelty · Capish · Anders Högberg",[4,12,20],"Can wider data access in clinical research work without losing governance or expertise? A look at getting the balance right."],["8846d9eb-ba18-465d-8dd1-de60e8a21f53",17,"13:30","14:00","ML09","Machine Learning, AI & Large Language Models","Boisdale 2","B","","What Is an AI Agent, and How Can It Be Built and Tailored for Pharma Use Cases?","Mr Pratik Khanna · HMS Analytical Software",[6,7,19,26,30,37],"A plain-English explanation of AI agents, how they are built and how to tailor them for pharma use cases."],["a4bcb830-963c-4a58-adb5-6f74c50e7a16",17,"13:30","14:00","RE07","Real-World Evidence","Dochart 2","I","","Harmonising EQ-5D-5L Survey Data in OMOP CDM v5.4: A LOINC-Free, Practical Approach","Maria Puri · Pfizer · Maria Styliani Sklirou · Ioannis Xanthakis · Nikolaos Kountouris",[27,29],"A practical way to bring EQ-5D-5L patient-reported outcomes into the OMOP data model for RWE and HTA use, without LOINC codes."],["58a05fd6-84de-4eff-862c-e788c66e0180",17,"13:30","14:00","SM11","Scripts, Macros & Automation","Dochart 1","B","","Code That Writes Code That Writes Code?! Creating ADaMs in R with {admiralroche}","Edoardo Mancini · Roche · Gordon Miller",[0,6,9,11,26],"How Roche's {admiralroche} team uses code that generates templates that generate ADaM code, keeping templates consistent and flexible."],["9fa3f06e-ec6a-4036-a3d2-a1ef8532b45e",17,"13:30","14:00","SD04","Software Demonstrations","Boisdale 1","B","","RESIDE: A transparent, non-disclosive tool for summarising and synthesising data from Trusted Research Environments","Dr Ryan Field · University of Glasgow · David McAllister",[0,16,27],"RESIDE, a tool that summarises data held in trusted research environments without disclosing it, so analyses can be planned before access."],["6a9d8b61-6222-49d0-bdb8-130dca9ed40c",17,"13:30","14:00","SA01","Submissions & Agencies","Alsh 1","B","","A Practical Hybrid Framework for Define.xml Development Across SDTM and ADaM Using Large Language Models and Pinnacle 21","Hiromi Okada · Shionogi · Seiko Yamazaki · Certara",[4,5,6,9,13,14,16,17],"Combining LLMs with Pinnacle 21 to build define.xml specifications for SDTM and ADaM faster, with checks for quality."],["ff214862-a7bd-40ab-b95f-47603869a2a6",17,"14:00","14:30","AS02","Analytics & Statistics","Carron 1","I","","Implementation of Estimands - A Case Study in Immunology","Mr. Sasikumar Shunmugam · Independent",[9,12,13,21,24,35],"An immunology case study on keeping estimand thinking consistent across the whole study, from data standards to final TLFs."],["03d172c2-00e9-4564-a2fd-2a9d61888be7",17,"14:00","14:30","ET02","Emerging Trends & Innovation","Alsh 2","I","","Kick-Starting Your DDF / USDM Journey: Lessons Learned from a Real-World PoC","Jasmine Kestemont · argenx · Stijn Rogiers",[15,27],"Lessons from a real proof of concept with argenx on starting with Digital Data Flow and USDM v4.0 for digital protocols."],["14274207-570b-4ca0-8c46-217e21761def",17,"14:00","14:30","LI05","Leadership Through Innovation","Carron 2","B","","Breaking Biometrics Silos: Fostering Shared Accountability to Fit-for-Purpose Data","Julie Tobback · SGS Pharma Clinical Research · Inge Leysen",[20,21,28,31],"SGS on breaking down silos between biometrics functions so everyone understands how their deliverables are used downstream."],["16d145ce-4249-4ea4-a65b-8fd71bc061d0",17,"14:00","14:30","ML10","Machine Learning, AI & Large Language Models","Boisdale 2","I","","From Expert Coding to Expert Steering: Zero-Shot TLF Generation with Agentic AI","Florian Wiese · Bayer · Antonia Wiebeler · Amazon Web Services",[0,6,7,11,21,30,34],"A Bayer and AWS proof of concept where multiple AI agents generated R code and draft TLFs with automated checks and human review."],["183010d6-2327-43f3-8712-12bfe9293e02",17,"14:00","14:30","RE05","Real-World Evidence","Dochart 2","B","","From Randomised Controlled Trials (RCTs) to Real-World Evidence (RWE) Studies: Statistical Challenges and Solutions to Consider in Studies Using Real-World Data (RWD)","Helen Marshall · Phastar",[17,27,35],"Statistical pitfalls when moving from randomised trials to real-world data studies, such as endpoints and baseline definitions, and how to handle them."],["8f9006cc-6edb-4ea8-8aa7-310d6af015e8",17,"14:00","14:30","SM12","Scripts, Macros & Automation","Dochart 1","I","","Reusable by Design: The Art of Generalised SAS Macros","Lara Suckut · Evidenze Germany",[10,11,25],"Tips for writing SAS macros general enough to reuse across studies instead of retiring them when a study closes."],["1c22a28f-c16f-4b1c-ace3-fe9a36761a8c",17,"14:00","14:30","SD05","Software Demonstrations","Boisdale 1","B","","Qlik If You Want to Go Faster","Alastair Sword · Veramed · Michael Byrne",[4,9,13,19,22,24,30],"Demo of Qlik Cloud for giving the right people controlled, up-to-date access to clinical data in a GxP setting."],["0973660a-84ca-4c23-bf2a-a0fcd18ab33d",17,"14:00","14:30","SA03","Submissions & Agencies","Alsh 1","I","","Explainable AI in Clinical Development: Bridging Innovation, Trust, and Regulatory Expectations","Kala Shivali · Sycamore Informatics",[6,12,16,17,24,27,28],"Practical approaches to making AI explainable and auditable in clinical data review, monitoring and metadata work."],["ee84dba7-aa97-4bfc-9eb2-541fd54b3888",17,"14:30","15:00","AS03","Analytics & Statistics","Carron 1","I","","Overlap Weighting vs Trimmed IPTW for Multi-Group Real-World Comparisons: A Simulation Study of Estimand Choice, Bias, and Precision Under Positivity Violations","Dimitris Karletsos, PhD",[0,27,35],"A simulation comparing overlap weighting with trimmed IPTW for three-group real-world comparisons when positivity is violated."],["98efb96a-e0ed-4244-9fdd-a3f312321bae",17,"14:30","15:00","ET03","Emerging Trends & Innovation","Alsh 2","I","","Protocol-Informed Synthetic EHR Generation for Clinical Trial Feasibility Assessment and Synthetic Control Arm Simulation","Francis Osei · Bayezian",[5,10,19,22,27],"Generating synthetic EHR data from a protocol to test trial feasibility and simulate synthetic control arms before real data exists."],["4abebd89-8982-44a3-bca1-7e79ec94bc46",17,"14:30","15:00","LI07","Leadership Through Innovation","Carron 2","B","","The Business Lead's Dilemma: Navigating the Collision of Agile Aspirations and GxP Reality","James Black · Novartis",[4,5,12,20,27,30],"Honest lessons from three SCE implementations at Roche and Novartis on being agile when validation takes months."],["dbb23083-bf5b-45f7-866e-3d147311eed2",17,"14:30","15:00","ML11","Machine Learning, AI & Large Language Models","Boisdale 2","I","","HepCHAT: Accelerating DILI Drug Safety Assessment with Knowledge Graph-Powered AI Agents","Merck",[6,7,19,22,36],"HepCHAT, an AI assistant using a knowledge graph and agents to support drug-induced liver injury assessments across 50+ sources."],["e737691a-126e-4f74-b7bb-865285fbccff",17,"14:30","15:00","RE06","Real-World Evidence","Dochart 2","I","","Establishing Robust Estimands in Real-World Evidence","Ksenia Titorenko · ICON",[17,27,28,29,35],"Applying the ICH E9(R1) estimand framework, designed for randomised trials, to real-world evidence studies."],["1b6b8a9f-60af-41ae-b973-466c33e1cd5f",17,"14:30","15:00","SM13","Scripts, Macros & Automation","Dochart 1","I","","Auto-Drafting SDTM Trial Design Domains from ClinicalTrials.gov JSON","Meruzhan Markosyan · AstraZeneca",[1,11,13,16],"A Python tool that drafts SDTM trial design domains automatically from ClinicalTrials.gov data instead of manual entry."],["a7cb8ca0-48c8-4252-850b-af14564d8cbc",17,"14:30","15:00","SD06","Software Demonstrations","Boisdale 1","I","","ValoRpacks in Action","Marc Jantke · Entimo",[0,3,4,5,6,11,12,17,18,21,30],"Demo of ValoRpacks, an approach to validated R packages for submissions without relying on costly commercial repositories."],["f3f08d8d-ce9f-41b5-9384-f7b4c2898ae4",17,"14:30","15:00","SA04","Submissions & Agencies","Alsh 1","I","","From Lineage to Submission: Generating Define.XML, SDRG, and ADRG from Verified Data Provenance","Mr Andrew York · Strategic Advisor · Verisian",[5,14,16,17,19,24,34],"Generating define.xml, SDRG and ADRG from verified data lineage so documentation matches the derivations actually run."],["ef524221-9d60-4b72-a8d6-5e763e532969",17,"15:00","15:30","AS04","Analytics & Statistics","Carron 1","A","","AI-Driven Automated Validation of Intercurrent Event Using Raw or SDTM Data","Inderjeet Arora · GENINVO",[5,6,11,13,16,28,35],"An automated framework that independently derives intercurrent events from raw or SDTM data to check programmers' ICE datasets."],["51021b97-1b3f-40f8-9fd8-dc6252f45909",17,"15:00","15:30","ET05","Emerging Trends & Innovation","Alsh 2","I","","One Study, Two Worlds: Rethinking the Exploratory-Regulatory Boundary with a Unified Analytics Platform","Parsa Mohammadian · Boehringer Ingelheim · Mike Stackhouse · Atorus Research",[0,4,5,17,30],"Using one analytics platform for both exploratory and regulatory work, so a study can move to submission without starting again."],["28ed8731-c5fa-4119-8c01-dc4c57b1d356",17,"15:00","15:30","LI06","Leadership Through Innovation","Carron 2","B","","From Kitchen to Table: Serving Insights With Internal Data Caterers and a Scalable FSP Engine","Melanie Buess · Bayer · Sascha Ahrweiler",[6,12],"Bayer's Data Caterer model for working with FSP partners in the AI era, beyond using them as extra capacity."],["bef92fe2-f912-460e-b142-4491721283e2",17,"15:00","15:30","ML14","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Back to the Future of CDISC Open Rules Authoring: Humans, AI, or Both?","Marisa Wyckmans · SGS Pharma Clinical Research · Roman Radelicki",[5,6,7,8,17,28],"Can AI help write CDISC Open Rules? SGS compares human, AI and combined approaches to authoring validation rules."],["4a89ce33-11f6-4e17-9916-0d9779c9c7c4",17,"15:00","15:30","RE04","Real-World Evidence","Dochart 2","I","","Keeping ADaM Stable When the Registry Is Not: Programming Lessons from Long Term European RWE","Anja Schulze · Cytel · Rasal Abdulsalam",[9,27],"Programming lessons for keeping ADaM stable over long European RWE studies when registry data and OMOP mappings keep changing."],["492a403d-9958-4f30-ad60-326efc794faf",17,"15:00","15:30","SM14","Scripts, Macros & Automation","Dochart 1","I","","Automating ATOXGR Derivation: A SAS Macro Approach to Translating CTCAE Criteria into Executable Logic","Arman Melkonyan · STATECS · Hripsime Mshetsyan",[11,17,25],"A SAS macro that turns CTCAE toxicity grading rules into reusable logic for ADLB ATOXGR, instead of study-specific hard coding."],["8caf034b-e69b-4cb3-8b90-8062ba0a3028",17,"15:00","15:30","SD07","Software Demonstrations","Boisdale 1","I","","Still Viewing Your Data Through a Keyhole?","Michael Weiss · P300",[19,25],"Demo of a tool for quickly exploring SAS, XPT, JSON and XML datasets in one place without switching between tools."],["10c84027-be8d-424c-8eff-b7832e37461b",17,"15:00","15:30","SA07","Submissions & Agencies","Alsh 1","A","","Reimagining eSubmission Support at Roche: A Strategic Shift Towards Digital Innovation and AI-Driven Efficiency in Analytical Data Science","Helene Royo · Roche",[0,3,4,6,7,11,17,25,26],"How Roche's data science group is reshaping e-submission support with digital tools and AI for faster, better submissions."],["828ac472-a2a5-4422-bcf5-b5d0fc183561",17,"16:00","16:30","AS05","Analytics & Statistics","Carron 1","I","","Re-Randomisation Tests in Clinical Trials: A Simulation Case Study and Practical Guidance","Alice Fletcher · Veramed",[0,17,25],"What re-randomisation tests are, when regulators expect them, and practical guidance from a simulation case study."],["51f67928-b145-4dd2-b9c0-26dda6113a55",17,"16:00","16:30","AD06","Application Development","Dochart 2","I","","SDTM in the Pipeline: Automated SDTM from Data Drop to Review-Ready with Scheduled Orchestration","Frikkie Oppel · Bioforum The Data Masters · Riaan Van Straaten · StratCon",[1,5,10,11,12,13,17,25,30,36],"An Azure DevOps pipeline that automates SDTM delivery end to end, from data drop to review-ready outputs on a schedule."],["4ea20f9b-a5c5-4b80-bdcb-ae5173cabe5f",17,"16:00","16:30","LI12","Leadership Through Innovation","","","","Aim for Sufficient, Not Perfect: A Risk-Based Prioritisation Framework in Clinical Trial Deliveries for the Statistical Programmer","Mikkel Willemoes · Novo · Sofie Skourup Brodin",[6,11],"Novo Nordisk's risk-based way of prioritising programming work so teams aim for sufficient rather than perfect under rising workloads."],["e6097ea7-a7cc-4e58-9d9c-766af5cda7cc",17,"16:00","16:30","ML13","Machine Learning, AI & Large Language Models","Boisdale 2","B","","AI-nonymous: Training AI models without exposing the study","Katie Best · Phastar",[6,17,21,22,24,28,31],"How to anonymise a clinical study well enough to train AI models while keeping as much useful information as possible."],["75d1fa0e-14b6-4381-bab5-d2e6f385e92e",17,"16:00","16:30","OS06","Open Source Technologies","Dochart 1","I","","Beyond Code: Collaboration Challenges in Pharma Open Source","Katja Glaß · Katja Glass Consulting · Mikkel Traun · Novo",[3,4,12],"Why sustained open-source collaboration is hard in pharma, using OpenStudyBuilder's alliance model as an example of a way forward."],["acd75a50-b9eb-4328-8a96-8a0b21219c42",17,"16:00","16:30","PD09","Professional Development","Boisdale 1","B","","From Study Lead to Molecule Lead: Navigating Growth, Complexity, and Identity in Statistical Programming","Elisabeth Deutschmann · Roche",[20,27],"Stepping up from study lead to molecule lead at Roche: growth, complexity and keeping it sustainable."],["695040f9-cc33-41e7-81bb-38de82571e49",17,"16:00","16:30","SI01","Standards Implementation","Alsh 2","B","","CDISC Open Rules: Progress, Performance, and Foundations for the Future","Els Janssens · SGS Pharma Clinical Research · Tomás Sabat Stöfsel · Verisian",[3,5,8,10,12,17],"An update on CDISC Open Rules and its engine CORE: performance, scalability and plans for the future."],["23033107-3146-48eb-bef5-c6408f360378",17,"16:00","16:30","SA02","Submissions & Agencies","Alsh 1","I","","AI: The New 'X' in GxP: A Practitioner's Roadmap","Kamila Duniec · Dr. Duniec",[4,6,10,12,17,21],"Turning FDA and EMA Good AI Practice principles into practical steps, with the programmer as auditor of AI outputs."],["cf8f8860-4e2f-4711-93e7-f6501bb05fba",17,"16:30","17:00","AS06","Analytics & Statistics","Carron 1","I","","Beyond Manual QC: AI Assisted Detection of Human Error in Large Scale TLF Review","Erik Torosyan · STATECS",[1,5,6,11,21],"Using AI to spot human errors and inconsistencies across hundreds of TLF outputs in large studies."],["8a176b36-0c1f-41f3-a580-065b0838fc3d",17,"16:30","17:00","AD03","Application Development","Dochart 2","B","","Scaling Clinical Data Review with R Shiny: Real-Time, High-Performance, Flexible, Cost-Efficient","Ryan Yu · Regeneron",[0,2,3,17,19,30],"Regeneron replaced commercial clinical data review tools with an R package for building fast, study-level Shiny apps."],["9f09a5ef-f79c-48d4-88b4-0db743114e1a",17,"16:30","17:00","LI08","Leadership Through Innovation","Carron 2","I","","Modernising Clinical Data Workflows Through Platform Innovation","Sandeep Juneja · argenx · Stijn Rogiers",[0,1,4,6,10,12,16,17,19,25,27,30,37],"argenx's use-case-driven evaluation of SAS Viya and Posit as a combined SAS, R and Python analytics platform."],["dafa05d9-72ee-45b3-8058-09568b5ee062",17,"16:30","17:00","ML21","Machine Learning, AI & Large Language Models","Boisdale 2","I","","AI-Assisted Safety Trend Analysis for Late-stage Oncology Studies","Ms Srividya Jagannath · AstraZeneca",[5,6,12,22,25,34],"AstraZeneca's AI-assisted workflow comparing interim and final safety reports in a Phase III oncology study to highlight what changed."],["3001776d-13ca-495a-8324-28ea0ab27845",17,"16:30","17:00","OS09","Open Source Technologies","Dochart 1","B","","Cross Industry Evaluation of Open Source R Packages for Clinical Trial Quality Management","Björn Koneswarakantha · Roche · Allan Hummer · Boehringer Ingelheim",[0,3],"An industry evaluation of the {ctas} R package for spotting site-level anomalies in trial quality management."],["40b53ca2-22e3-4f45-8f0f-1cff6f175889",17,"16:30","17:00","PD01","Professional Development","Boisdale 1","I","","Cracking the Code: Mastering ATS (Applicant Tracking Systems) to Land Your Dream Job","Elsa Lozachmeur · Viatris Innovation · Tom Oades · Skills Alliance",[20],"How applicant tracking systems filter CVs, and how to get past them when applying for pharma programming jobs."],["04af659e-6737-4263-a0ef-e0bedca0784f",17,"16:30","17:00","SI02","Standards Implementation","Alsh 2","I","","From Deliverable Validation to Standards Lifecycle Validation Using CDISC CORE","Roger Gagali Angoh · Mel Consulting",[5,8,11,13,14,16,24],"Using CDISC CORE earlier in the standards lifecycle to catch problems in collection definitions and SDTM libraries, not just final packages."],["8fadd946-f13e-4bc6-a64b-ba06af12212a",17,"16:30","17:30","Panel","Submissions & Agencies","","","","The Future Regulatory Ecosystem: AI, Digital Evidence, and Intelligent Submissions in the Next Decade","Kamila Duniec · Dr. Duniec · Helene Royo · Roche · Marie Ôrre · EMA · Berber Snoeijer · ClinLine · Mr Andrew York · Strategic Advisor · Verisian",[4,5,6,11,17,27,28,32],"Panel with EMA and industry speakers on how AI, digital evidence and new regulator expectations will reshape submissions."],["74079387-83d4-4fa4-bf75-02b51bf8ca28",17,"17:00","17:30","AS09","Analytics & Statistics","Carron 1","I","","Longitudinal Funnel Plots for Determining KRI Thresholds: The {gsm.timez} R package","Donato Rolo · Roche",[0,3,19,22],"Funnel plots for setting fairer site monitoring thresholds over time, using the {gsm.timez} R package."],["6877aacf-d243-4212-a77d-927c74f58cf9",17,"17:00","17:30","AD01","Application Development","Dochart 2","A","","Death by a Thousand Spreadsheets: Making the Connection for Streamlined CDISC 360i Workflows","Dan Bowgett · Phastar",[0,1,3,5,8,10,11,12,13,14,15,16,17,24,25],"A JSON-native approach to SDTM mapping where one metadata source drives define.xml, reviewer guides and annotated CRFs."],["85a43155-9a17-4330-bdd7-8a41cd7e1095",17,"17:00","17:30","LI10","Leadership Through Innovation","Carron 2","B","","UCB's Transition to Open-Source: A Managed Identity Shift, not a Technology Migration","Gloria Dsouza · UCB Biosciences · Alexandra Wall",[3,25,31,36],"UCB treated its move to open source as a change in professional identity, not just a tools migration, and shares how it managed that."],["14cdb7cc-e510-48fc-9797-dd0179a3b091",17,"17:00","17:30","ML16","Machine Learning, AI & Large Language Models","Boisdale 2","I","","AI Programmer: Autonomous Generation of CDISC-Compliant ADaM Datasets via Multi-LLM Cascade Architecture","Ashish Tele · GSK",[0,4,5,6,8,9,10,11,17,19,21,22],"GSK's fully autonomous pipeline in which several LLMs work in sequence to turn specs into validated R code for ADaM datasets."],["54e4866c-37c9-41d4-a14a-678de0c8b09a",17,"17:00","17:30","OS05","Open Source Technologies","Dochart 1","B","","A Case Study in Adoption and Adaptation of Open-Source Statistical Software for Industry: MetaInsight","Janion Nevill · University of Leicester · Dr Ryan Field · University of Glasgow",[0,3,5],"A case study adapting MetaInsight, academic open-source software, so it meets industry needs for validation and reproducibility."],["97a6ebe3-bad7-45b2-ad9f-32cdafbb7d5f",17,"17:00","17:30","PD10","Professional Development","Boisdale 1","B","","Navigating Career Pathways in the Clinical Industry","Mr Jakon Changfoot · MMS Holdings · Mr Kenneth Kotze · Burger Lubbe",[20],"Realistic career paths in clinical programming and statistics, including sideways moves across functions as well as promotion."],["bc2fb427-0e82-4999-bd5f-921696b5fb63",17,"17:00","17:30","SI03","Standards Implementation","Alsh 2","I","","SDRG Automation Made Possible!!!","Vicky Poulsen · Novo",[5,11,13,14,16,17],"Novo Nordisk's automated flow for producing submission-ready SDRGs, including study details and conformance reports."],["7f8a3dc2-4a01-4d84-a9cb-cef607e4b34d",17,"17:30","19:00","PP01","Poster Presentations","Hall 2","I","","Multidimensional Stacked Plots for Clinical Data Visualization and Real-Time Analytics","Alona Bulana · Grünenthal",[8,9,13,16,19,22],"Using heat maps and stacked bar plots to show several dimensions of clinical data together for exploration and monitoring."],["a9f0ed1c-93d1-45e1-9282-f4eed8688b1f",17,"17:30","19:00","PP02","Poster Presentations","Hall 2","I","","Set, Flag, Filter: A Practical Framework for Implementing Estimand Strategies in Clinical Trial Data","Louise Slack · Johnson & Johnson",[12,35],"A practical set, flag and filter method for capturing intercurrent events and applying estimand strategies in trial data."],["9479d846-c1a7-41b3-8213-381e8135454f",17,"17:30","19:00","PP03","Poster Presentations","Hall 2","I","","Unexpected Retrospective CBER Requests: Lessons Learned Across Three Years of Vaccine Submissions","Mr Mark Malayas · Cytel · Angelo Tinazzi",[5,8,9,13,17],"Three years of unexpected CBER requests to rework SDTM and ADaM for vaccine submissions, and what was learned."],["e5ee5b1c-6d81-4230-8899-adb1bf507fa0",17,"17:30","19:00","PP04","Poster Presentations","Hall 2","I","","Building a Unicorn Farm: Rethinking Skills-Based Career Pathways Across Standards, Data Science, and Automation","Roxanne McGuire · Veramed",[11,20,31],"Rethinking career paths around skills rather than job titles, for people who combine standards, data science and automation."],["73ab5867-8039-40cf-aad3-82033c2f3bb5",17,"17:30","19:00","PP05","Poster Presentations","Hall 2","I","","Reducing ADaM and SDTM Specification Rework with a Metadata-Driven Generation Framework","Panagiota Sokratous · ClinBAY",[9,11,13,16],"Generating ADaM and SDTM specifications automatically from central metadata to cut rework when structures change."],["717c3e66-254f-434c-bbc4-0c0a8cd19bcf",17,"17:30","19:00","PP06","Poster Presentations","Hall 2","B","","Push, Test, Deploy: CI/CD for Multi-Environment Clinical Data Workflows","Stine Winkler Bertelsen · Novo · Anja Jazbec",[5,6,10,11,17,25,28,30],"Novo Nordisk's Git-based CI/CD pipeline for testing and deploying clinical data workflows to Databricks and SAS Viya."],["d3d601ec-df55-45d9-b60a-eec12863ac33",17,"17:30","19:00","PP07","Poster Presentations","Hall 2","I","","Accelerating Safety Aggregate Reporting Using Generative AI for Cross-System Information Consolidation","Anna Markella Antoniadi · Pfizer · Anna Skountzou · Angeliki Maria Katsifoli",[5,6,11,16,17,21,22,24],"Pfizer uses generative AI to pull scattered information together at the start of safety aggregate reports."],["28dab9f0-3f43-4f71-9156-9efba8f3b026",17,"17:30","19:00","PP08","Poster Presentations","Hall 2","B","","Beyond Swimmer Plots: Discovering Hidden Patient Journey Patterns Through Visual Fingerprints and Clustering","Aram Harutyunyan · BioBrain PRO",[9,10,13,19,22,26],"Turns patient journeys into compact visual fingerprints and clusters them to reveal patterns that swimmer plots miss."],["6df0c43c-9eb9-44b4-8c34-c05aacdab4c0",17,"17:30","19:00","PP09","Poster Presentations","Hall 2","I","","An R Package for End-to-End Quality Control of ADaM Datasets and Aggregate Report Deliverables","Lorentzos Buhagiar · Pfizer · Marianna Papadopoulou · Alexandros Chalamandaris · Athanasia Kalogirou",[0,3,5,9,13,16,17,21],"Pfizer's standards-aware R package for quality control of ADaM datasets and aggregate report outputs end to end."],["ef3bff3f-c036-4a9c-95b7-e3efd2072998",17,"17:30","19:00","PP10","Poster Presentations","Hall 2","B","","Building It Right the First Time: A Practical Playbook for First-Time QC Programming","Magdalena Grabarczyk-Talarek · AstraZeneca",[5,9,11,13,16,21],"A playbook for building quality into SDTM, ADaM and TLF work up front, so fewer errors need finding later."],["7670524c-5164-4893-abac-450e81cd7925",17,"17:30","19:00","PP11","Poster Presentations","Hall 2","B","","When Claude Met ADaM: A Particular Set of Skills for Agent-Assisted Programming","Joanna Scharoch · Roche · Harleen Lehal",[0,5,6,7,9,26],"Roche's lessons from using an AI coding agent with admiral for ADaM work, including the skills and context it needed."],["477f5c68-040b-4818-8245-f6fbadcf5541",17,"17:30","19:00","PP12","Poster Presentations","Hall 2","B","","Boost Your Comparison!","Lionel Debecq · IDDI · Kevin Francois",[11,25],"A SAS macro that improves on PROC COMPARE with automatic sorting and clearer, more complete difference reports."],["12270d3a-fdc8-4e19-8c58-df1d764fdd6f",17,"17:30","19:00","PP13","Poster Presentations","Hall 2","I","","The Adventures of a Validated Statistical Computing Environment: A Journey From Startup to Scale up","Mr Steve Huggins · Katalyze Data",[4,12,17,30],"How a validated statistical computing environment should grow from startup to scale-up as needs and regulations change."],["4fb19d0e-2119-4209-a2dc-7f8c3d928983",17,"17:30","19:00","PP14","Poster Presentations","Hall 2","B","","PHUSE Working Groups Highlights","Chris Price · Johnson & Johnson",[17,24,32],"A round-up of what the nine PHUSE Working Groups have been working on and how to get involved."],["840535df-7056-4114-b44f-3a2a892727c2",17,"17:30","19:00","PP15","Poster Presentations","Hall 2","I","","AE Individual Swimmer Plots for Integrated Safety Visualization in Clinical Trials","Evangelia Shimitra · ClinBAY",[9,19,22,25,34],"Applying swimmer plots to adverse events, showing timing, duration and severity for each patient, built in SAS from ADAE."],["8d7e6f99-2f84-4de2-b3ce-8af4df023975",17,"17:30","19:00","PP16","Poster Presentations","Hall 2","B","","Turning Up the Heat: A Comparative Analysis of Heat Map Generation in R and SAS","Manita Bhardwaj · Adelphi Values",[0,3,19,25],"Comparing how to build heat maps in R and SAS, to help teams adopting open source."],["ab28d12f-4bc6-4635-bbb4-efe91e5da6dd",17,"17:30","19:00","PP17","Poster Presentations","Hall 2","I","","Unlocking Insights with Flexible Temporal Perspectives","Anna Berg · Capish · Catharina Dahlbo",[19,22,27],"Using a graph database to explore preclinical, clinical and real-world data across different ways of representing time."],["b40fa6fe-76cc-4315-a53b-4026c8680a99",17,"17:30","19:00","PP18","Poster Presentations","Hall 2","B","","Unearth the Unexpected: D·I·Gging Beyond Standard TLFs with Open Source Applications","Tammo Reinders · Evidenze Germany · Ms Olga Martini · Syneos Health · Veronika Schmidt",[0,2,3,19,21,22],"Bayer's interactive R Shiny apps for exploring safety and efficacy data beyond the standard set of TLFs."],["e2381ebe-983e-4c94-ba50-1785390b067a",17,"17:30","19:00","PP19","Poster Presentations","Hall 2","B","","Closing the Gap from Bedside to Reporting: Lessons Learned Using BDC as EDC","Jenny Williams Durkin · Fortrea",[20,21,24],"Lessons from using bedside data capture as the trial database, from source data through to reporting."],["dbab2666-0fdb-44aa-b57e-86f2b090ab7f",17,"17:30","19:00","PP20","Poster Presentations","Hall 2","I","","Rethinking Bias in Real-World Evidence: A Structured Framework for Health Equity Analytics","Vasiliki Economou · Pfizer · Mr. Dimitrios Kounelis · Nikolaos Kountouris · Dimitra Bokou",[5,27],"A framework for spotting and handling selection, measurement and time-related bias in real-world health equity analyses."],["b88a5195-16fd-4451-a3a0-45761a722aa5",17,"17:30","19:00","PP21","Poster Presentations","Hall 2","I","","Key Takeaways From the PHUSE RWD Guidelines for Programming and Analysis Processes White Paper","Yen Phan · CodLad · Berber Snoeijer · ClinLine",[12,17,22,27,28],"Key points from the PHUSE white paper on programming and analysis processes for real-world data studies."],["1747da46-7f80-42ac-8a76-3153dab67041",17,"17:30","19:00","PP22","Poster Presentations","Hall 2","I","","Parallel Submission-Ready CDx Data: Standardisation that Speeds Precision Trials and Review","Satish Patil · Bayer",[8,11,17,30],"Standardising companion diagnostic data so the drug and diagnostic can be submitted in parallel without slowing either down."],["463842a2-9729-4963-8b4a-fbe5fa5337ea",17,"17:30","19:00","PP23","Poster Presentations","Hall 2","I","","Unleashing SpecToADaM: Automating the Journey from Clinical Specifications to ADaM datasets","Lluís Giménez · AstraZeneca",[0,4,6,9,11,22,25,28,36],"SpecToADaM, an AI-assisted tool that turns Excel specs into reviewable SAS or R code, with transparency about how it got there."],["d60a3a31-e148-40f0-8057-dd516b60a291",17,"17:30","19:00","PP24","Poster Presentations","Hall 2","I","","Local AI's Dirty Secret: Your Workstation's Carbon Bill","Spencer Renyard · elderbrook solutions",[6,24],"The hidden three-year energy and carbon cost of running AI models locally on your own workstation."],["86ea3d37-e66c-4a5c-abf3-d5e99691ca45",17,"17:30","19:00","PP25","Poster Presentations","Hall 2","I","","R You Creating ADRG?","Antonio Rodríguez · Johnson & Johnson",[0,9,11,16,17,21],"Using Quarto and R to fill in much of the ADaM Reviewer's Guide automatically from datasets and metadata."],["85efc5fe-2874-42f0-957d-f84b261f3231",17,"17:30","19:00","PP26","Poster Presentations","Hall 2","I","","Dynamic Report Generation with R Markdown and Proc Stream","Duong Tran · Scbase",[0,1,2,19,21,25],"Using R Markdown with R, SAS and Python to build reproducible reports, dashboards and apps from one document."],["e553bd1f-f5a7-4f76-a7be-0a4af3a575f6",17,"17:30","19:00","PP27","Poster Presentations","Hall 2","B","","The Mouse Behind the Keyboard","Chloe Floodgate · Phastar",[20,22],"A look at animal testing in clinical research from the mouse's point of view, and why it still matters."],["5903a849-d62b-4061-8756-285a4d9516a0",17,"17:30","19:00","PP28","Poster Presentations","Hall 2","I","","QCTLCOMPARE: No More Chaos for QC Tracking","Kseniia Kalinina · Johnson & Johnson",[5,11,21,25,28],"A tool that keeps QC tracking up to date automatically across reruns and data transfers for large studies."],["03516451-2c3d-4fe8-8fb7-51e5ee96e5d2",17,"17:30","19:00","PP29","Poster Presentations","Hall 2","B","","Building Next-Generation Talent: AstraZeneca's Oncology Programming Graduate Program","Ngo Khoa Cac Nguyen · AstraZeneca · Eleni Barmpa",[6,20,21,29,34],"How AstraZeneca's two-year graduate programme rotates new programmers across oncology, medical affairs, payers and statistics."],["11781c4f-5189-4cd2-ab5f-d5664eaa8417",17,"17:30","19:00","PP30","Poster Presentations","Hall 2","I","","Define.xml 2.1: Common Implementation Mistakes and How to Avoid Them","Wilri Mackay · IQVIA · Siddeshwar Utge",[5,8,9,11,13,14,16,17],"Common define.xml 2.1 mistakes, from mixed versions to incomplete codelists, and how to avoid them."],["56ccbc00-b59c-474d-9797-dbe288b048c4",17,"17:30","19:00","PP31","Poster Presentations","Hall 2","B","","Operationalising the DC Domain in SDTM IG 4.0","Julieta Gonzalez · IQVIA",[9,13,16,19],"How to use the new DC domain in SDTMIG 4.0 to handle subjects who are screened or enrolled more than once."],["cd9d75c2-838f-49b7-a279-c46734723e02",17,"17:30","19:00","PP32","Poster Presentations","Hall 2","B","","Hero-in-the-Loop: A Super Squad Approach to SDTM Creation & Validation","Wendy Young · Certara · Julie Ann Hood",[4,5,6,8,12,13,17],"A team approach to SDTM creation and validation that brings data managers, standards managers, programmers and statisticians together."],["",18,"09:00","10:30","","Keynote","Lomond Auditorium","","","Off Grid, On Call: AI at the Edge of Medicine","Dr Beth Healey · Antarctic and expedition doctor",[6,27,32],"Dr Beth Healey, who has worked as a doctor in Antarctica and on remote expeditions, on where AI genuinely helps medicine at the edge and where it quietly fails."],["9ee597e8-5df2-4203-baf2-4293ad778194",18,"11:00","11:30","AS08","Analytics & Statistics","Carron 1","I","","Practical Troubleshooting of PROC MIXED for Irregularly Spaced Longitudinal Data","Anna Papadopoulou · AstraZeneca",[25,35],"A practical guide to fixing PROC MIXED convergence and covariance warnings with irregularly spaced longitudinal data."],["7133a062-78d2-4dd6-8e87-52ebf33cbfdb",18,"11:00","11:30","AD09","Application Development","Dochart 2","B","","Anchoring Your Data: Leveraging PORT (R Shiny) for Centralised and Traceable Clinical Data Pooling","Branka Mitrici · Roche · Ben Dukelow",[0,2,11,13,16,19],"PORT, an R Shiny app that uses metadata to make pooling SDTM data across studies far less manual and repetitive."],["c4061426-7c33-4290-947a-fcb39208bedf",18,"11:00","12:30","","Hands-on Workshops","Alsh 1","","data4knowledge","Data First: Connecting the Digital Protocol to Analysis-Ready Data","Kirsten Langendorf · data4knowledge · Dave Iberson-Hurst · Johannes Ulander",[8,9,11,13,14,15,16,19,23,24],"Workshop extending d4k's USDM and Biomedical Concepts demos to connect the digital protocol through to analysis-ready data."],["38cfabe7-78e1-4906-83b6-ba5bcd136523",18,"11:00","11:30","ML15","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Nangula: Revolutionising clinical protocol disclosure using LLMs","Pietro Mascheroni · Boehringer Ingelheim · Mbangula Lameck Amugongo",[5,6,11,17,28,36],"Nangula, an LLM-based tool that extracts protocol information automatically for regulatory disclosure."],["a8349770-6da7-484f-8294-02285eb779d8",18,"11:00","11:30","OS08","Open Source Technologies","Dochart 1","I","","Challenges and Lessons Learned from a Double Transition Journey: From Legacy to Modern Analytics Environment and from SAS to R","Ms Vasiliki Papadaki · Pfizer · Deppy Stamatopoulou · Mr. Vasileios Tillis",[0,3,5,25,30,31],"Pfizer's lessons from moving to a modern analytics platform and from SAS to R at the same time."],["041065fc-d280-47a8-a8ef-02b4a35b643b",18,"11:00","11:30","PM04","People Leadership & Management","Alsh 1","I","","The Escalation Problem in Biometric Teams: When Issues Reach the Wrong Level at the Wrong Time","Arman Melkonyan · STATECS · Ellada Abrahamyan",[20,22],"Why issues in biometrics teams often reach the wrong level at the wrong time, and how to get escalation right."],["a64153f3-2ceb-4a6c-827e-2326f0e83924",18,"11:00","11:30","PD11","Professional Development","Boisdale 1","B","","Healthcare Begins With Self-Care: Neuroscience-Based Tips to Improve Wellbeing and Increase Performance","Alen Kamalov · mainanalytics",[20],"Neuroscience-based tips for staying focused and well through long days of detailed programming work."],["8948d566-1eb0-4b09-9abd-197ee71a24dc",18,"11:00","11:30","SI08","Standards Implementation","Alsh 2","I","","Integrating unstructured exploratory biomarker data using CDISC SDTM standards","Tom Smeets · OCS Life Sciences · Mr. Filip Beeldens · argenx",[8,9,12,13,17],"Bringing messy exploratory biomarker data from many vendors into a consistent structure using CDISC SDTM."],["fcae7c34-8bb5-431d-a9bb-531f9bce22f6",18,"11:30","12:00","AS07","Analytics & Statistics","Carron 1","B","","Navigating the Noise: StatOps' Fix for Discoverable Statistical Knowledge","Louise Webber · GSK · Andy Nicholls",[6,31,35],"GSK's StatOps approach to making statistical code easy to find, reuse and keep up to date across studies."],["146a6090-bfe9-4da6-abcb-0a14a04c6118",18,"11:30","12:00","AD08","Application Development","Dochart 2","I","","From Command Line to Shiny: Integrating CDISC CORE with R for Interactive Conformance Data Validation","Janakiraman Gunasekaran · Alira Health · Rupesh Katta",[0,2,3,5,8,17,19,21],"An R Shiny app that puts CDISC CORE conformance checks behind a simple interface, so nobody needs the command line."],["51cd557a-5da2-45b5-a2b4-79eab426038a",18,"11:30","12:00","ML17","Machine Learning, AI & Large Language Models","Boisdale 2","I","","Automating ADaM Specifications using Agentic AI","Ashwin Kumar · K3 Innovations",[6,7,9,11,13,16,17,36],"Agentic AI that drafts ADaM specifications by drawing on the SAP, protocol and other study documents for context."],["38c0e3d9-9f9d-4fc2-8623-3d0f4c6378e6",18,"11:30","12:00","OS07","Open Source Technologies","Dochart 1","I","","Enter the Metaverse: Clinical Standards Built for AI","Stuart Malcolm · Veramed",[3,6,8,11,16,17],"Why clinical standards built for manual, document-based work need rethinking so AI can use them safely and at scale."],["aa4d53c8-efa5-462f-a6f0-2f18ad25f397",18,"11:30","12:00","PM05","People Leadership & Management","Carron 2","B","","ARTEMIS II: A Masterclass in Communication and Soft Skills for High-Thriving Teams","Isabel Alves · SGS Pharma Clinical Research",[20],"Lessons from NASA's Artemis II mission on communication and soft skills for high-performing clinical teams."],["77f5dbc9-90b7-48a1-b34c-869f768b305b",18,"11:30","12:00","PD12","Professional Development","Boisdale 1","I","","Therapeutic Area Knowledge: Strengthening Collaboration Beyond the Data","Jean-Marc Ferran · Qualiance",[20],"How data scientists can add value beyond running analyses by building therapeutic area knowledge and working closely with medical teams."],["1965d659-4641-4319-8fec-8b0c12109de6",18,"11:30","12:00","SI07","Standards Implementation","Alsh 2","I","","Submitting PRO Data in Oncology Trials: From FDA Guidance to Practical Implementation","Anastasiia Drach · AstraZeneca",[9,13,17,24,34,35],"What the FDA's 2023 guidance on missing PRO data means in day-to-day practice for oncology submissions."],["617343f8-1759-46ff-bdb0-9cb6521931ca",18,"12:00","12:30","AS10","Analytics & Statistics","Carron 1","I","","Early Signals, Better Decisions: Action Limits as an Early Warning Mechanism","Annett Keller · Boehringer Ingelheim · Nathalie van Borrendam · Johnson & Johnson",[12,22],"The PHUSE QTL working group on using action limits as an early warning so risk signals can be acted on in time."],["574b8ee4-13a8-458a-8421-552cd6da6d24",18,"12:00","12:30","AD02","Application Development","Dochart 2","A","","ADaM Programs as Build Artifacts: The Open-Source Mighty Framework","Matthew Phelps · Novo · Aksel Thomsen",[0,3,9,11,13],"Novo Nordisk's open-source mighty framework, which generates ADaM programs from specs so they can be tested and rebuilt like software."],["903931d5-2ec9-4d5e-aaca-3a84db1df611",18,"12:00","12:30","ML18","Machine Learning, AI & Large Language Models","Boisdale 2","B","","Human-Centred AI Adoption in HTA Statistical Programming: Mitigating Knowledge Atrophy in AI-Augmented HTA Statistical Programming Workflows","Rob Livermore · MSD",[6,10,17,29,31],"MSD on adopting AI in HTA programming without programmers losing the domain knowledge and judgement the work depends on."],["db819098-424c-4523-8cc2-33f44e2e0fbd",18,"12:00","12:30","OS04","Open Source Technologies","Dochart 1","I","","Establishing a Qualified R Package for PK/PD Analysis After SAS Migration","Corinna Stöckinger · Boehringer Ingelheim · Milena Kraus · HMS Analytical Software",[0,3,10,12,18,25],"Boehringer's journey from AI-assisted SAS migration to pkadsbuildr, a qualified R package for PK/PD data preparation."],["5da2f527-0122-4e46-9af6-4ad0ac28ddb0",18,"12:00","12:30","PM06","People Leadership & Management","Carron 2","I","","Transition From a Culture of Compliance to One of Psychological Ownership","Bidyot Sharma · Cytel",[4,20],"Moving teams from a defensive, compliance-first mindset towards ownership and accountability for outcomes."],["769bf44b-0de9-43bb-9ac1-780236ef398c",18,"12:00","12:30","PD13","Professional Development","Boisdale 1","B","","Getting to Yes: Why Good Ideas Fail and What Data Scientists Can Learn from Sales","Phil Loucks · d-wise, an Instem company · Stephen Baker",[12,20],"Why good ideas in clinical data science fail to get adopted, and what technical people can learn from sales to get to yes."],["518383b1-3c89-40cc-8ba9-2f883843b2c0",18,"12:00","12:30","SI09","Standards Implementation","Alsh 2","I","","When the Specification Is the Code: Zero-Drift Define-XML from Python Pipeline","Riccardo Cusinato · Roche",[1,3,5,8,10,14,17],"How Fleet, an open-source Python toolkit, keeps specs, code and define.xml in sync so they cannot drift apart."],["006cf980-9780-443c-90e2-abbe21f7d0cb",18,"13:30","14:00","AS11","Analytics & Statistics","Carron 1","I","","Developing a Simulation-Informed Decision Framework for Interpretation of Interim Survival Data in Oncology Trials","Andrew Mills · MMS Holdings",[17,34,35],"A simulation-based framework for interpreting interim overall survival when PFS looks good but OS hints at possible harm."],["25dcce34-e147-48bd-a257-5a76d65de52c",18,"13:30","14:00","AD05","Application Development","Dochart 2","B","","CAT: The CRF Annotation Tool That Pounces on Manual Workflows","Michel Lutz · mainanalytics · Pravat Pradhan · BioNTech",[1,11,24],"CAT, a production tool that automates CRF annotation even when company standards and study mappings are incomplete."],["f85602da-92e3-4287-956b-47ba27346d12",18,"13:30","13:45","CT06","Coding Tips & Tricks","Alsh 1","B","","PROC COMPAREing? Why Settle for the Default? A Toolkit for Effortless Data Comparisons","",[5,11,25],"Ready-made toolkits that summarise dataset and directory differences more usefully than a default PROC COMPARE."],["a1811bf8-f1b4-4e49-9534-5656455da39f",18,"13:30","14:00","ML19","Machine Learning, AI & Large Language Models","Boisdale 2","B","","How to Control the Machine Spirit Without Just Praying for Success","Josua Böser · Evidenze Germany · Veronika Schmidt",[6,10,31],"Practical techniques for controlling AI coding tools: enforcing style, structuring code, saving tokens and protecting your data."],["4438c22c-ba75-4bc9-88a3-50e1272fc4a2",18,"13:30","14:00","OS10","Open Source Technologies","Dochart 1","B","","The Evolving Role of the Analytic Software Developer: From Legacy Stability to AI-Driven, 'Vibe-First' Approaches","Andy Nicholls · GSK · Alanah Jonas",[3,6,12,26],"How the clinical software developer role at GSK is shifting from stable tools to open source and now AI-first approaches."],["e2288394-6267-4c6d-ae26-0161ebd85ac8",18,"13:30","14:00","PM07","People Leadership & Management","Carron 2","I","","Leading by Coaching: Practical Stories and Tools for Statistical Programming Leaders","Daniel Graham · AstraZeneca",[20],"Real stories and coaching phrases from an AstraZeneca leader on how a coaching style changed delivery, trust and careers."],["ba29025f-9303-4b94-ad66-ac4d6d7291c3",18,"13:30","14:00","PD14","Professional Development","Boisdale 1","I","","From Knowledge Transfer to AI-Guided Learning: How Mentoring Changed Over Five Years","Daryna Lohvinova · Intego Clinical",[6,20,31],"How mentoring junior programmers has changed over five years now that AI tools are part of everyday learning."],["0b68b25f-33fd-47cf-b1bd-049125d9e1a8",18,"13:30","14:00","SI06","Standards Implementation","Alsh 2","I","","A Journey to Standardised Analysis Results Datasets in Alignment with CDISC ARS","Maarten Borremans · SGS Pharma Clinical Research",[5,8,16,17,21,23],"SGS's journey to standardised Analysis Results Datasets aligned with CDISC ARS, making results reusable rather than locked in PDFs."],["7c2ac342-7ffe-4775-8177-231252d1ec6c",18,"13:45","14:00","CT07","Coding Tips & Tricks","Alsh 1","B","","Leading the Future With SAS","Eniola Ajayi · Phastar",[25],"A custom SAS function for looking ahead to later records in a DATA step, something SAS doesn't offer out of the box."],["ff803626-9432-4ce0-9dc0-0367e3e39827",18,"14:00","14:30","AS12","Analytics & Statistics","Carron 1","B","","See What Win Odds Hide: Unlocking Hierarchical Composite Endpoints with Maraca Plots","Aram Harutyunyan · BioBrain PRO · Aram Khachatryan",[0,19,25,35],"Maraca plots for hierarchical composite endpoints, showing what a win odds summary alone can hide."],["0e1bc023-847d-498d-b786-f4639efb2344",18,"14:00","14:30","AD04","Application Development","Dochart 2","B","","Enabling Cross-Industry Collaboration With NNSynthetic: Realistic Simulated ADaM Synthetic Data and Clinical Utility Evaluation","Jonas Dahl Andersen · Novo · Christian Aebeloe",[3,9,28],"Novo Nordisk's NNSynthetic, which generates realistic simulated ADaM data so trial data can be shared for collaboration."],["c98b08f3-df1b-4944-a313-2579a9287694",18,"14:00","14:15","CT13","Coding Tips & Tricks","Alsh 1","","","Introducing PROC R","Jim Box · SAS",[0,25],"An introduction to PROC R, the new way to run R inside SAS programs and pass data and macro variables between them."],["5f8e1072-0cb7-4bf1-8aac-c4634ebd962b",18,"14:00","14:30","ML20","Machine Learning, AI & Large Language Models","Boisdale 2","I","","A Retrieval-Augmented, Multi-Agent Approach for Target Trial Emulation Protocol Development","Georgios Panagiotakis · Pfizer · Nikolaos Kountouris · Mr Vasileios Kontonis · Angeliki Revelou",[6,7,17,27,36],"Pfizer's multi-agent system using retrieval to help draft target trial emulation protocols for real-world evidence."],["9bf6171a-75ae-469e-8b0b-53a61a039fa9",18,"14:00","14:30","OS11","Open Source Technologies","Dochart 1","I","","Moving Forw-ARD: Lowering the Barrier to Clinical Reporting with NEST 2.0 and {gtsummary}","Dr Chi Zhang · Roche",[0,3,21,23,26],"Roche's NEST 2.0 and {gtsummary}, lowering the learning curve for R-based clinical reporting with ARDs."],["42331306-7350-4ed5-b351-09cf5984114d",18,"14:00","14:30","PM01","People Leadership & Management","Carron 2","B","","Can Your Candidate Really Program? Interviewing Clinical Programmers in the GenAI Era","Anastasiia Tarnavska · Intego Clinical",[6,20],"How to tell genuine programming skill from AI-assisted answers when interviewing clinical programmers today."],["d9bf9d9a-8396-4e4e-804e-9ac00ff8df98",18,"14:00","14:30","PD15","Professional Development","Boisdale 1","B","","Beyond the Syntax: Rethinking Training and Support for SAS-to-R Transitions","Sophie Lee · Veramed",[0,3,25,31],"A training and support programme that tackles the identity and confidence side of moving programmers from SAS to R."],["9affa8a1-08ef-4cdc-add1-c7832948ff9f",18,"14:00","14:30","SI04","Standards Implementation","Alsh 2","A","","Digital Schedules of Activities (SoA): Why Precision and Completeness Are Essential for Operational Implementation and Interoperability","Andy Richardson · fhir4pharma",[8,11,15],"Why digital schedules of activities must be complete and precise if digital protocols are to drive systems automatically."],["8576badf-015b-4251-a0a5-2331bf9f38cf",18,"14:15","14:30","CT10","Coding Tips & Tricks","Alsh 1","B","","Demystifying CALL EXECUTE","Robert Potter · Phastar",[11,25],"A clear guide to CALL EXECUTE in SAS for writing dynamic, data-driven code, and the pitfalls to avoid."],["9f7b7db5-9139-4193-ba95-9a6b0710afa3",18,"14:30","15:00","AS13","Analytics & Statistics","Carron 1","A","","Pathologist Agreement Studies: Addressing Cross-Correlated Binary Outcomes to Ensure Accurate Estimation of Uncertainty","Eileen Holmes · Phastar · Daniel Izquierdo Juncas · Daiichi Sankyo",[34,35],"Statistical methods for pathologist agreement studies where cases and readers form a crossed, nested structure."],["d20b6064-1a0a-490c-b2d9-2c9cd763cbed",18,"14:30","15:00","AD07","Application Development","Dochart 2","I","","From TLF Spec to Disposition Flow: A Web-First Workflow Powered by SAS and GenAI","Humberto Garcia Caballero · Bayer · Juan Alvarez Vazquez",[6,19,21,25],"PatFlow, a web tool that combines GenAI and medical writer review to build and validate patient disposition flows."],["e65cd335-d7df-4f82-ae88-cf08770ac127",18,"14:30","14:45","CT11","Coding Tips & Tricks","Alsh 1","I","","Old, Not Obsolete! A Brief Introduction to Regular Expressions and Why They Are Still Relevant","Thomas Gulholm-Hansen · TGU Consult",[0,25],"A friendly introduction to regular expressions and why understanding them still matters when AI can write them for you."],["2169b43f-7a95-421b-bc7e-182d11d1cded",18,"14:30","15:00","ML12","Machine Learning, AI & Large Language Models","Boisdale 2","I","","GxP-ready Agentic AI: Trustworthy Autonomy by Design","Matthew Travell · Jazz Pharmaceuticals · Lawrence Dennison-Hall",[4,6,7,12,17],"Jazz Pharmaceuticals on designing agentic AI so it can meet GxP expectations, with approval gates and controlled tools."],["df7cb231-0b4c-4a19-a7c0-38ba9dfaa0d3",18,"14:30","15:00","OS12","Open Source Technologies","Dochart 1","I","","One Import, Every Layer: How Fleet Closes the Loop from CDISC Library to Clinical Tables in Python","Mahdi About · Independent",[1,3,5,8,9,10,13,14,16,17,21],"Fleet, an open-source Python toolkit that takes you from the CDISC Library to clinical tables with one import."],["f1e8e365-f231-48b5-be77-6b4dd9854f16",18,"14:30","15:00","PM08","People Leadership & Management","Carron 2","I","","Unlocking Neurodiversity: Leading Standard Processes With Non-Standard Minds","Luke Thompson · Astellas Pharma",[20],"A programmer with ADHD on practical ways leaders can unlock neurodivergent strengths in their teams."],["fb46e39d-92b0-4bbf-8988-349ed229f79c",18,"14:30","15:00","PD16","Professional Development","Boisdale 1","I","","Balancing Change and Delivery in Clinical Programming: Managing Evolving Tools, Standards, and Teams in the Context of Pharmaceutical Industry Transformation","Monika Ludwinska · Intego Clinical",[6,12,20],"Balancing ongoing delivery with constant change in tools, standards and teams as R and AI reshape the industry."],["c00267f6-ab96-4288-b0f0-cec2093b4056",18,"14:30","15:00","SI05","Standards Implementation","Alsh 2","B","","From RAW to Ready: A Biotech's Approach to Building Standards from the Ground Up","Lewis Meares · Blue Earth Diagnostics",[8,9,13,24],"How a small biotech built its SDTM and ADaM standards from scratch, and the trade-offs between functions."]]};
+const TAGS = DATA.tags;
+const DAYN = {15:"Sunday",16:"Monday",17:"Tuesday",18:"Wednesday"};
+const DAYS = {15:"Sun 15 Nov",16:"Mon 16 Nov",17:"Tue 17 Nov",18:"Wed 18 Nov"};
+const LVL = {B:"Beginner",I:"Intermediate",A:"Advanced"};
+const S = DATA.s.map((r,i)=>({n:i,id:r[0],day:r[1],start:r[2],end:r[3],code:r[4],stream:r[5],room:r[6],lvl:r[7],sponsor:r[8],title:r[9],people:r[10],tags:r[11],sum:r[12]||""}));
+const mins = t => { const [h,m]=t.split(":").map(Number); return h*60+m; };
+S.forEach(s=>{ s.a=mins(s.start); s.b=Math.max(mins(s.end), s.a+15); s.poster=/Poster/.test(s.stream); s.keynote=/Keynote/.test(s.stream); });
+const EV = "https://events.phuse.global/event/EUConnect26/";
+const pageOf = s => /Hands-on/.test(s.stream) ? "hands-on-workshops" : (!s.code || s.code==="Panel") ? "interactive-sessions-panels" : "";
+const url = s => { const pg = pageOf(s); if (!pg) return EV+"agenda";
+  const frag = s.title.split(/\s+/).slice(0,4).join(" ").replace(/[:,]$/,"");
+  return EV+pg+"#:~:text="+encodeURIComponent(frag).replace(/-/g,"%2D"); };
+const el = (tag, attrs={}, ...kids) => { const e=document.createElement(tag); for (const [k,v] of Object.entries(attrs)) { if (k==="class") e.className=v; else if (k==="text") e.textContent=v; else e.setAttribute(k,v);} for (const k of kids) if (k!=null) e.append(k); return e; };
+
+/* ---------- quick matcher ---------- */
+const SYN = {
+ "R":["\\br\\b","tidyverse","rstudio","positron","cran","r package"],
+ "Python":["python","pandas","jupyter"],
+ "Shiny":["shiny","teal","dashboard app","interactive app"],
+ "Open source":["open[- ]?source","oss\\b","sas to r","sas-to-r","migrat"],
+ "GxP / compliance":["gxp","complian","audit","inspection","regulated"],
+ "Validation / QC":["validat","\\bqc\\b","quality control","double programming","verif","review"],
+ "AI / LLMs":["\\bai\\b","llm","genai","gen ai","generative","chatgpt","copilot","claude","language model","prompt"],
+ "Agentic AI":["agent","agentic","mcp","autonomous"],
+ "CDISC":["cdisc","standards?\\b","core rules","open rules"],
+ "ADaM":["adam\\b"],
+ "Data engineering":["data engineer","pipeline","api","databricks","lakehouse","sql","etl"],
+ "Automation":["automat","macro","reus"],
+ "Governance / strategy":["governance","strategy","roadmap","operating model"],
+ "SDTM":["sdtm","mapping"],
+ "Define-XML":["define","adrg","sdrg","reviewer guide"],
+ "USDM / digital protocol":["usdm","digital protocol","ddf","m11","schedule of activities","360i","esap"],
+ "Metadata":["metadata","mdr","biomedical concept","specification"],
+ "Regulatory submission":["submission","fda","ema","pmda","regulator","agency","agencies"],
+ "Package validation / risk":["package valid","riskmetric","package risk","qualif","package management"],
+ "Data visualisation":["visuali","plot","graph","figure","dashboard","chart"],
+ "Leadership / careers":["leader","\\bleading\\b","manag","career","people manag","mentor","wellbeing","soft skill","hiring","interview","burnout","psychological"],
+ "Quarto / reporting":["\\btlfs?\\b","\\btfls?\\b","\\btables?\\b","listing","\\breport","\\brtf\\b","quarto","markdown"],
+ "Safety":["safety","adverse","\\bae\\b","signal"],
+ "ARS / ARD":["\\bars\\b","\\bard\\b","analysis result","\\bcards\\b"],
+ "Data management / EDC":["edc","data management","crf"],
+ "SAS":["\\bsas\\b","proc\\b","macro"],
+ "pharmaverse / admiral":["pharmaverse","admiral","gtsummary","rtables","tern\\b","nest\\b"],
+ "RWE / RWD":["rwe","rwd","real[- ]world","registry","omop","ehr","external control","synthetic control","target trial"],
+ "Data transparency / privacy":["transparen","privacy","anonymi","redact","disclosure","synthetic data"],
+ "HTA / market access":["hta","health technology","jca","joint clinical","amnog","market access","payer","nice\\b","heor","eq-?5d","utility","utilities"],
+ "Cloud / platforms":["cloud","platform","\\bsce\\b","computing environment","aws","azure","container","docker","git\\b","ci/?cd"],
+ "Training / upskilling":["training","upskill","onboard","teach","graduate","placement"],
+ "Digital health / wearables":["wearable","imaging","digital health","sensor"],
+ "SEND / nonclinical":["\\bsend\\b","nonclinical","non-clinical","toxicolog"],
+ "Oncology":["oncolog","cancer","tumou?r","recist"],
+ "Statistics / estimands":["estimand","bayes","surviv","causal","iptw","weighting","mmrm","mixed model","simulation","statistical method","longitudinal"],
+ "RAG / retrieval":["\\brag\\b","retrieval","knowledge graph","literature"],
+ "Machine learning":["machine learning","\\bml\\b","predict","cluster"]
+};
+const SYNRE = Object.fromEntries(Object.entries(SYN).map(([k,v])=>[k,new RegExp(v.join("|"),"i")]));
+const STOP = new Set("a an and are as at be but by for from have how i in into is it its me my of on or our so that the this to want we what with you your about like learn more see interested work working also some any other others using use new".split(" "));
+const LEARN_RE=/\b(want|wanna|learn|new to|explore|curious|interested|keen|looking|hope|get into|understand|see how|find out|improve|start(ing|ed)?|upskill|moving (in)?to|switch(ing)? to|transition(ing)? to|try)\b/i;
+const KNOW_RE=/\b(know|comfortable|experienced|familiar|expert|years|already|confident|background|good at|strong|specialis|i'?m an?|i am an?|work(ing)? (in|on|with|as))\b/i;
+function parseIntent(q){
+  const parts = q.split(/[.;\n!?]+|,\s*(?=but\b)|\bbut\b|\band\b(?=\s+(?:i|want|would|am|keen|hope|looking|now|also)\b)/i).map(x=>x.trim()).filter(Boolean);
+  const learn=[], known=[], gen=[];
+  for (const c of parts){ if (LEARN_RE.test(c)) learn.push(c); else if (KNOW_RE.test(c)) known.push(c); else gen.push(c); }
+  const tagsIn = t => TAGS.map((n,i)=>SYNRE[n] && SYNRE[n].test(t) ? i : -1).filter(i=>i>=0);
+  const lT = tagsIn(learn.join(" ")), gT = tagsIn(gen.join(" ")).filter(i=>!lT.includes(i)), kT = tagsIn(known.join(" ")).filter(i=>!lT.includes(i)&&!gT.includes(i));
+  return {lT, gT, kT, active: learn.concat(gen).join(" ") || q};
+}
+function quickPlan(q){
+  const {lT,gT,kT,active} = parseIntent(q);
+  const words = (active.toLowerCase().match(/[a-z0-9+#]{3,}/g)||[]).filter(w=>!STOP.has(w));
+  const beginner = /beginner|new to|junior|starting|first time/i.test(q), advanced=/advanced|expert|deep/i.test(q);
+  const all = S.filter(s=>!s.keynote).map(s=>{
+    const hl = s.tags.filter(t=>lT.includes(t)), hg = s.tags.filter(t=>gT.includes(t)), hk = s.tags.filter(t=>kT.includes(t));
+    const tl = (s.title+" "+s.stream+" "+s.sum).toLowerCase();
+    const wh = words.filter(w=>tl.includes(w));
+    const wt = words.filter(w=>(s.title+" "+s.stream).toLowerCase().includes(w)).length;
+    let score = hl.length*4 + hg.length*3 + hk.length*1 + wt*2 + (wh.length-wt);
+    if (hk.length && s.lvl==="A") score+=2;
+    if (beginner && s.lvl==="B") score+=1; if (advanced && s.lvl==="A") score+=1;
+    return {s, score, hl, hg, hk, wh};
+  });
+  const scored = all.filter(x=>x.score>=4 && (x.hl.length||x.hg.length||x.wh.length||(x.hk.length&&x.s.lvl==="A"))).sort((x,y)=>y.score-x.score || x.s.n-y.s.n);
+  const picks=[]; let posters=0;
+  for (const x of scored){
+    if (x.s.poster){ if (posters>=4) continue; }
+    else if (picks.filter(p=>!p.s.poster).length>=16) continue;
+    else if (picks.some(p=>!p.s.poster && p.s.day===x.s.day && p.s.a<x.s.b && x.s.a<p.s.b)) continue;
+    if (x.s.poster && picks.some(p=>!p.s.poster && p.s.day===x.s.day && p.s.a<x.s.b && x.s.a<p.s.b)) continue;
+    if (x.s.poster) posters++;
+    let why;
+    if (x.hl.length) why = "Something you want to learn: "+listJoin(x.hl.slice(0,3).map(i=>TAGS[i]));
+    else if (x.hg.length) why = "Matches "+listJoin(x.hg.slice(0,3).map(i=>TAGS[i]));
+    else if (x.hk.length) why = "An advanced take on "+listJoin(x.hk.slice(0,2).map(i=>TAGS[i]))+", which you already know";
+    else why = "Mentions "+listJoin(x.wh.slice(0,3).map(w=>"“"+w+"”"));
+    picks.push({s:x.s, why});
+  }
+  if (picks.length && !picks.some(p=>p.s.day===15)){
+    const sun = all.filter(x=>x.s.day===15).sort((x,y)=>y.score-x.score || x.s.n-y.s.n)[0];
+    if (sun) picks.push({s:sun.s, why:"Sunday's hands-on workshops open the conference. This is the closest fit to what you described."});
+  }
+  const kw = S.filter(s=>s.keynote).map(s=>({s, why:"Keynote: everyone's in the main auditorium."}));
+  const extra = (picks.length && alsoOn()) ? addAlsoLike(picks, q) : [];
+  const main = picks.filter(p=>!extra.some(e=>overlap(e.s,p.s)));
+  let lead;
+  if (lT.length) lead = `Focused on what you want to learn: ${listJoin(lT.map(i=>TAGS[i]))}.` + (kT.length?` Gave less weight to what you already know (${listJoin(kT.map(i=>TAGS[i]))}), apart from advanced sessions.`:"");
+  else if (gT.length) lead = `Matched on ${listJoin(gT.map(i=>TAGS[i]))}.` + (kT.length?` Gave less weight to what you already know (${listJoin(kT.map(i=>TAGS[i]))}).`:"");
+  else lead = "Matched on the words in your description.";
+  return {summary: picks.length ? `${lead} ${main.length} sessions with no time clashes, plus the keynotes${extra.length?`, and ${extra.length} “You may also like” sessions from other streams`:""}. Hover over a title for a summary.` : "No strong matches yet. Try saying your role, what you already know well and what you want to learn, for example R, CDISC standards, AI agents, RWE or leadership.", picks: picks.length ? main.concat(extra, kw) : [], nomatch: !picks.length};
+}
+function listJoin(a){ return a.length<2 ? (a[0]||"") : a.slice(0,-1).join(", ")+" and "+a[a.length-1]; }
+
+
+/* ---------- you may also like ---------- */
+const ALSO_WHY = {
+ "Professional Development":"A personal development session to balance the technical picks.",
+ "People Leadership & Management":"A people and leadership talk, useful whatever your role.",
+ "Leadership Through Innovation":"How teams lead change, a different angle from your technical picks.",
+ "Analytics & Statistics":"A statistics session to see the methods side of the work.",
+ "Data Standards & Governance":"A standards session to see where the industry's data model is heading.",
+ "Standards Implementation":"Practical standards work, a useful view from outside your usual topics.",
+ "Submissions & Agencies":"A look at the regulatory side, outside your usual topics.",
+ "Real-World Evidence":"Real-world evidence, a growing area worth a look.",
+ "Data Visualisation":"A visualisation session for a fresh way of looking at data.",
+ "Machine Learning, AI & Large Language Models":"A look at where AI is heading in our work.",
+ "Open Source Technologies":"An open-source session, a different toolkit from your usual one.",
+ "Data Handling & Data Engineering":"A data engineering session on what happens before analysis.",
+ "Emerging Trends & Innovation":"An emerging trend worth knowing about, outside your usual topics.",
+ "Application Development":"A look at the apps and tools side of the work.",
+ "Scripts, Macros & Automation":"Automation ideas you might borrow, outside your usual topics.",
+ "Software Demonstrations":"A live demo, outside your usual topics."
+};
+function hashStr(t){ let h=0; for (const ch of t) h=(h*31+ch.charCodeAt(0))>>>0; return h; }
+const PEOPLE=new Set(["Professional Development","People Leadership & Management","Leadership Through Innovation"]);
+const overlap=(x,y)=>x.day===y.day && !x.poster && !y.poster && !x.keynote && !y.keynote && x.a<y.b && y.a<x.b;
+function addAlsoLike(picks, q){
+  const userStreams = new Set(picks.map(p=>p.s.stream));
+  const usedTags = new Set(picks.flatMap(p=>p.s.tags));
+  const peopleHeavy = picks.filter(p=>PEOPLE.has(p.s.stream)).length >= picks.length/2;
+  const h = hashStr(q||"x"), out=[];
+  for (const [day, people] of [[16,true],[17,false],[18,true]]){
+    const wantPeople = peopleHeavy ? false : people;
+    const base = s=>s.day===day && !s.keynote && !s.poster && s.code && s.b-s.a<=60 && ALSO_WHY[s.stream] && !userStreams.has(s.stream) && s.lvl!=="A" && !out.some(o=>o.s.stream===s.stream);
+    let c = S.filter(s=>base(s) && PEOPLE.has(s.stream)===wantPeople && s.tags.filter(t=>usedTags.has(t)).length<=1);
+    if (!c.length) c = S.filter(s=>base(s) && PEOPLE.has(s.stream)===wantPeople);
+    if (!c.length) c = S.filter(base);
+    if (!c.length) continue;
+    const free = c.filter(s=>!picks.some(p=>overlap(p.s,s)));
+    const pool = free.length ? free : c;
+    const s = pool[(h + day*7) % pool.length];
+    out.push({s, why: ALSO_WHY[s.stream], also:true});
+  }
+  return out;
+}
+const alsoOn = ()=>{ const b=document.getElementById("alsoOn"); return !b || b.checked; };
+
+/* ---------- Claude matcher ---------- */
+const CATALOGUE = S.map(s=>[s.n, DAYS[s.day].slice(0,3)+" "+s.start+"-"+s.end, s.code||"-", s.stream, LVL[s.lvl]||"-", s.title, s.tags.map(i=>TAGS[i]).join(", "), s.sum].join(" | ")).join("\n");
+// The fixed part (instructions + full programme) is identical for everyone, so it can be cached.
+const PROMPT_FIXED = () => `You are helping an attendee plan their PHUSE EU Connect 2026 conference schedule (clinical data science, statistical programming, CDISC standards, open source, AI).
+
+Below is the full programme, one session per line:
+n | day time | paper code | stream | audience level | title | topic tags | short summary
+
+${CATALOGUE}
+
+Pick the 12 to 20 talks, workshops and panels that best fit the attendee described at the end, plus 2 to 4 posters. Rules:
+- Two picked sessions must not overlap in time on the same day. Poster Presentations (stream "Poster Presentations") all share one slot; pick 2 to 4 posters that fit (they do not clash with each other, but they do clash with other sessions in that slot).
+- Skip keynotes; they are added automatically.
+- Prefer relevance over filling every slot. Respect any level, role or topic preferences they state.
+- The attendee is here to learn, not just to confirm what they know. Prioritise topics they say they want to learn or are new to. Give topics they say they already know well lower priority, unless the session is advanced or adds something genuinely new.
+- "why" is one short plain-English sentence (max 22 words) tying the session to what they said. No dashes as punctuation.
+- "summary" is two sentences on the shape of the plan, written to the attendee.
+- If the description says nothing about what they want from the conference (small talk, a joke, just wanting coffee), return an empty "picks" list and a one-sentence friendly "summary" asking them to describe their role and interests.
+
+Reply with only JSON: {"summary": string, "picks": [{"n": number, "why": string}]}`;
+const promptUser = q => `Attendee's description:\n"""${q.slice(0,1500)}"""`;
+function claudePrompt(q){ return PROMPT_FIXED() + "\n\n" + promptUser(q); }
+
+/* ---------- plan state + render ---------- */
+let plan = null, isExample = true;
+const planEl = document.getElementById("plan");
+let nessieNext=false;
+function setPlan(p, example){
+  document.getElementById("planSec").hidden = false;
+  nessieNext = true;
+  plan = p; isExample = !!example;
+  document.getElementById("exampleFlag").hidden = !isExample;
+  document.getElementById("summary").textContent = p.summary;
+  renderPlan();
+}
+const GROUPS = [
+ ["AI & machine learning","#7c5cd6"],["Tools & code","#1f8fc7"],["Standards & submissions","#2f9e6a"],
+ ["Data & platforms","#c98a10"],["Stats, RWE & visuals","#d4507a"],["People & careers","#e2662a"],["Workshops & panels","#6b7a99"],["Posters","#8c9bb5"]];
+function groupOf(s){
+  const st=s.stream;
+  if (s.poster) return 7;
+  if (/Hands-on|Keynote/.test(st) || s.code==="Panel") return 6;
+  if (/Machine Learning/.test(st)) return 0;
+  if (/Open Source|Scripts|Coding|Application|Software/.test(st)) return 1;
+  if (/Standards|Submissions/.test(st)) return 2;
+  if (/Data Handling|Emerging/.test(st)) return 3;
+  if (/Real-World|Analytics|Visualisation/.test(st)) return 4;
+  if (/Professional|People|Leadership/.test(st)) return 5;
+  return 6;
+}
+function renderGlance(picks){
+  const box = el("div",{class:"glance"});
+  const head = el("div",{class:"glance-head"}, el("h3",{text:"Your week"}));
+  box.append(head);
+  // mix bar
+  const counts = GROUPS.map(()=>0); picks.filter(p=>!p.s.keynote).forEach(p=>counts[groupOf(p.s)]++);
+  const total = counts.reduce((a,b)=>a+b,0)||1;
+  const bar = el("div",{class:"mix",role:"img","aria-label":"Mix of topics in your plan"});
+  const legend = el("div",{class:"legend"});
+  counts.forEach((c,i)=>{ if(!c) return;
+    const seg = el("span",{class:"seg-"+i,title:GROUPS[i][0]+": "+c}); seg.style.flex=String(c); seg.style.background=GROUPS[i][1]; bar.append(seg);
+    const sw = el("span",{class:"sw"}); sw.style.background=GROUPS[i][1];
+    legend.append(el("span",{class:"lg"}, sw, GROUPS[i][0]+" ", el("b",{text:String(c)})));
+  });
+  // day tracks
+  const T0=8*60+30, T1=19*60, span=T1-T0;
+  const days=[15,16,17,18].filter(d=>picks.some(p=>p.s.day===d));
+  const tracks = el("div",{class:"tracks"});
+  const axis = el("div",{class:"track axis"}, el("span",{class:"tlab"}));
+  const ax = el("div",{class:"lane"});
+  for (let h=9; h<=19; h+=2){ const t=el("span",{class:"tick",text:String(h).padStart(2,"0")+":00"}); t.style.left=((h*60-T0)/span*100)+"%"; ax.append(t); }
+  axis.append(ax); tracks.append(axis);
+  for (const d of days){
+    const lane = el("div",{class:"lane"});
+    for (const p of picks.filter(p=>p.s.day===d)){
+      const s=p.s, a=Math.max(s.a,T0), b=Math.min(s.b,T1); if (b<=a) continue;
+      const blk = el("span",{class:"blk"+(p.also?" also":"")+(s.keynote?" key":""),title:s.start+"–"+s.end+"  "+(s.code?s.code+"  ":"")+s.title});
+      blk.style.left=((a-T0)/span*100)+"%"; blk.style.width="calc("+((b-a)/span*100)+"% - 2px)"; 
+      if (s.poster && picks.filter(q=>q.s.poster).indexOf(p)>0) continue;
+      lane.append(blk);
+    }
+    tracks.append(el("div",{class:"track"}, el("span",{class:"tlab",text:DAYS[d].slice(0,3)}), lane));
+  }
+  box.append(tracks);
+  if (nessieNext){
+    nessieNext=false;
+    tracks.insertAdjacentHTML("beforeend",'<svg class="nessie" viewBox="0 0 90 30" aria-hidden="true"><path d="M4 26 C8 14 16 14 20 26 Z M28 26 C32 10 42 10 46 26 Z M54 26 C57 16 63 16 66 26 Z" class="hump"/><path d="M66 26 C70 8 74 4 80 4 C85 4 87 8 84 10 C81 11 79 9 77 10 C75 14 75 20 76 26 Z" class="hump"/><circle cx="81" cy="6.5" r="1" class="eye"/><path d="M0 27 Q11 24 22 27 T44 27 T66 27 T90 27" class="ripple"/></svg>');
+    const n=tracks.querySelector(".nessie"); setTimeout(()=>{ if(n) n.remove(); }, 4200);
+  }
+  box.append(el("p",{class:"hint glance-note",text:"Each block is a session in your plan. Outlined ones are “You may also like” picks."}));
+  return box;
+}
+let view = "list", lastSwapped = null;
+const THISTLE = '<svg class="thistle" viewBox="0 0 20 24" aria-hidden="true"><path d="M10 23 V14" stroke="#3c8d5a" stroke-width="2" stroke-linecap="round"/><path d="M10 18 C6 17 4 15 3 13 M10 18 C14 17 16 15 17 13" stroke="#3c8d5a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M5 14 C5 10 15 10 15 14 C15 16 5 16 5 14 Z" fill="#3c8d5a"/><g class="bloom"><path d="M6 10 L5 3 M8 9 L7.5 1.5 M10 9 L10 1 M12 9 L12.5 1.5 M14 10 L15 3" stroke="#8a4fb0" stroke-width="2" stroke-linecap="round"/></g></svg>';
+const CRANE = '<svg class="crane" viewBox="0 0 120 96" aria-hidden="true"><rect x="78" y="10" width="7" height="84" class="cr-mast"/><path d="M78 30 L84 30 L84 36 L78 36 Z M78 50 L84 50 L84 56 L78 56 Z M78 70 L84 70 L84 76 L78 76 Z" class="cr-x"/><rect x="18" y="8" width="96" height="6" class="cr-jib"/><rect x="100" y="14" width="12" height="8" class="cr-weight"/><rect x="74" y="4" width="15" height="8" rx="1" class="cr-cab"/><g class="cr-hook"><line x1="26" y1="14" x2="26" y2="70" class="cr-cable"/><path d="M22 70 h8 v4 a4 4 0 1 1 -8 0 Z" class="cr-h"/></g></svg>';
+function craneIn(){
+  if (lastSwapped==null) return;
+  const slot = planEl.querySelector('[data-n="'+lastSwapped+'"]'); lastSwapped=null;
+  if (!slot) return;
+  const sess = slot.querySelector(".sess"); sess.classList.add("lowered");
+  sess.insertAdjacentHTML("beforeend", CRANE);
+  try{ slot.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){}
+  setTimeout(()=>{ sess.classList.remove("lowered"); const c=sess.querySelector(".crane"); if(c) c.remove(); }, 2200);
+}
+const fmt = m => String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+function setView(v){ view=v; document.getElementById("vList").setAttribute("aria-pressed", v==="list"); document.getElementById("vTlf").setAttribute("aria-pressed", v==="tlf"); renderPlan(); }
+function renderPlan(){
+  planEl.replaceChildren();
+  const picks = plan.picks.slice().sort((x,y)=>x.s.day-y.s.day || x.s.a-y.s.a || x.s.n-y.s.n);
+  if (!picks.length){
+    if (plan.nomatch){
+      const box = el("div",{class:"rain"});
+      box.innerHTML = '<svg viewBox="0 0 120 90" aria-hidden="true"><g class="drops"><line x1="38" y1="58" x2="35" y2="70"/><line x1="52" y1="60" x2="49" y2="72"/><line x1="66" y1="58" x2="63" y2="70"/><line x1="80" y1="60" x2="77" y2="72"/><line x1="45" y1="66" x2="42" y2="78"/><line x1="73" y1="66" x2="70" y2="78"/></g><path class="cloud" d="M30 52 C18 52 16 36 28 34 C28 22 44 18 50 26 C56 14 76 16 78 30 C92 28 96 46 86 52 Z"/></svg>';
+      box.append(el("div",{}, el("h3",{text:"Nae luck."}), el("p",{text:"Nothing matched that description. Try saying your role, what you already know well and what you want to learn, or tap one of the examples above."})));
+      planEl.append(box);
+    } else planEl.append(el("p",{class:"empty",text:"Nothing picked yet."}));
+    return;
+  }
+  const posters = picks.filter(p=>p.s.poster), main = picks.filter(p=>!p.s.poster);
+  if (view==="tlf"){ renderTLF(main, posters); return; }
+  planEl.append(renderGlance(picks));
+  const al = picks.filter(p=>p.also);
+  if (al.length){
+    const h3a = el("h3"); h3a.innerHTML = THISTLE+"<span>You may also like</span>";
+    const box = el("div",{class:"alsobox"}, h3a, el("p",{class:"hint",text:"A few sessions from other streams you might enjoy. They're already in your plan below."}));
+    const ul = el("ul");
+    for (const p of al) ul.append(el("li",{}, el("span",{class:"when",text:DAYS[p.s.day].slice(0,3)+" "+p.s.start}), el("span",{}, el("b",{text:p.s.title}), el("span",{class:"hint",text:" · "+p.s.stream}), p.s.sum ? el("span",{class:"alsosum",text:p.s.sum}) : null)));
+    box.append(ul); planEl.append(box);
+  }
+  for (const d of [15,16,17,18]){
+    const dp = main.filter(p=>p.s.day===d); if (!dp.length) continue;
+    const box = el("div",{class:"day"}, el("h3",{}, DAYN[d], el("span",{class:"d",text:d+" Nov · "+dp.length+(dp.length===1?" session":" sessions")})));
+    for (const p of dp) box.append(slotRow(p, true));
+    planEl.append(box);
+  }
+  if (posters.length){
+    const s0 = posters[0].s;
+    const box = el("div",{class:"day"}, el("h3",{}, "Poster picks", el("span",{class:"d",text:DAYS[s0.day]+" · "+s0.start+"–"+s0.end+" · "+(s0.room||"Poster hall")})));
+    posters.forEach((p,i)=>box.append(slotRow(p, true, "Visit "+fmt(s0.a+5+i*15))));
+    planEl.append(box);
+  }
+  craneIn();
+}
+function runStamp(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+fmt(d.getHours()*60+d.getMinutes()); }
+function tlfBlock(num, title, pop, head, rows, foot){
+  const t = el("div",{class:"tlf"});
+  t.append(el("div",{class:"tlf-top"}, el("span",{text:"PHUSE EU Connect 2026"}), el("span",{class:"pg",text:"Page 1 of 1"})));
+  t.append(el("div",{class:"tlf-title"}, el("div",{text:num}), el("div",{text:title}), el("div",{text:pop})));
+  const table = el("table"), thead=el("thead"), tr=el("tr");
+  for (const h of head) tr.append(el("th",{text:h})); thead.append(tr); table.append(thead);
+  const tb = el("tbody");
+  for (const r of rows){
+    const row = el("tr", r.grp?{class:"grp"}:(r.first?{class:"first"}:{}));
+    if (r.grp) row.append(el("td",{colspan:String(head.length),text:r.grp}));
+    else r.cells.forEach((c,i)=>row.append(el("td", (r.nw||[]).includes(i)?{class:"nw",text:c}:{text:c})));
+    tb.append(row);
+  }
+  table.append(tb); t.append(el("div",{class:"tlf-scroll"}, table));
+  const f = el("div",{class:"foot"}); for (const line of foot) f.append(el("div",{text:line})); t.append(f);
+  return t;
+}
+function renderTLF(main, posters){
+  const rows=[]; let d=0;
+  for (const p of main){
+    const first = p.s.day!==d; d=p.s.day;
+    rows.push({first, cells:[first ? "2026-11-"+d : "", p.s.start+"–"+p.s.end, p.s.code||(p.s.keynote?"KEY":/Hands-on/.test(p.s.stream)?"HOW":"PANEL"), p.s.title+(p.also?" [a]":""), p.s.room||""], nw:[0,1,2]});
+  }
+  const foot = ["[a] You may also like: a session from a stream outside your usual topics.","Code prefix gives the stream (e.g. ML = Machine Learning, AI & LLMs). KEY = keynote, HOW = hands-on workshop.","Times are local (GMT). Source: EU Connect 2026 public agenda as published 2026-10-30; check the official agenda for changes.","Unofficial tool. Run: "+runStamp()];
+  planEl.append(tlfBlock("Table 14.1.1","Your Conference Programme","Planned Population (N = 1)",["Date","Time","Code","Session","Room"],rows,foot));
+  if (posters.length){
+    const s0=posters[0].s, A=s0.a, B=s0.b, NS="http://www.w3.org/2000/svg";
+    const W=640, L=150, R=16, top=10, rowH=34, H=top+posters.length*rowH+40, x=m=>L+(m-A)/(B-A)*(W-L-R);
+    const svg=document.createElementNS(NS,"svg"); svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.setAttribute("class","fig"); svg.setAttribute("role","img"); svg.setAttribute("aria-label","Suggested poster visit times");
+    const mk=(tag,at,txt)=>{ const e=document.createElementNS(NS,tag); for (const k in at) e.setAttribute(k,at[k]); if (txt!=null) e.textContent=txt; svg.append(e); return e; };
+    const yAx=top+posters.length*rowH;
+    const bg=mk("g",{});
+    const into=(g,tag,at)=>{ const e=document.createElementNS(NS,tag); for (const k in at) e.setAttribute(k,at[k]); g.append(e); return e; };
+    for (let m=A; m<=B; m+=15){ mk("line",{x1:x(m),x2:x(m),y1:top-4,y2:yAx,class:"fg-grid"}); mk("text",{x:x(m),y:yAx+16,"text-anchor":"middle",class:"fg-tick"},fmt(m)); }
+    mk("line",{x1:L,x2:W-R,y1:yAx,y2:yAx,class:"fg-axis"});
+    mk("text",{x:(L+W-R)/2,y:yAx+34,"text-anchor":"middle",class:"fg-lab"},"Time (GMT)");
+    const PAL=["#1c3687","#3cc1b4","#4a78d8","#1f9e8f","#6f86c9","#7fd3c9"];
+    into(bg,"rect",{x:x(A),y:top-4,width:x(B)-x(A),height:yAx-top+4,class:"fg-band"});
+    posters.forEach((p,i)=>{
+      const y=top+i*rowH+rowH/2, v=A+5+i*15, c=PAL[i%PAL.length];
+      if (i%2) into(bg,"rect",{x:L-70,y:y-rowH/2,width:W-R-L+70,height:rowH,class:"fg-zebra"});
+      mk("text",{x:L-10,y:y+4,"text-anchor":"end",class:"fg-lab",fill:c},p.s.code+(p.also?" [a]":""));
+      mk("line",{x1:x(A),x2:x(v),y1:y,y2:y,class:"fg-wait",stroke:c});
+      mk("rect",{x:x(v),y:y-9,width:Math.max(6,x(v+15)-x(v)),height:18,rx:9,fill:c});
+      mk("circle",{cx:x(v),cy:y,r:5,class:"fg-dot",stroke:c});
+      mk("text",{x:x(v+15)+8,y:y+4,class:"fg-tick"},fmt(v)+"–"+fmt(v+15));
+    });
+    const foot = posters.map(p=>p.s.code+": "+p.s.title+(p.s.people?" ("+p.s.people.split(" · ")[0]+")":""));
+    foot.push("Bars show a suggested 15-minute visit; dashed lines show time before the visit. Unofficial tool. Run: "+runStamp());
+    const t = el("div",{class:"tlf"});
+    t.append(el("div",{class:"tlf-top"}, el("span",{text:"PHUSE EU Connect 2026"}), el("span",{class:"pg",text:"Page 1 of 1"})));
+    t.append(el("div",{class:"tlf-title"}, el("div",{text:"Figure 14.2.1"}), el("div",{text:"Recommended Posters: Suggested Visit Times"}), el("div",{text:"Poster Session, 2026-11-"+s0.day+", "+s0.start+"–"+s0.end+", "+(s0.room||"Poster hall")})));
+    t.append(el("div",{class:"tlf-scroll"}, svg));
+    const f=el("div",{class:"foot"}); for (const line of foot) f.append(el("div",{text:line})); t.append(f);
+    planEl.append(t);
+  }
+  const pgs=planEl.querySelectorAll(".tlf .pg"); pgs.forEach((p,k)=>p.textContent="Page "+(k+1)+" of "+pgs.length);
+}
+function sessCard(s, why, also){
+  const meta = el("div",{class:"meta"});
+  if (also){ const b=el("span",{class:"badge-also"}); b.innerHTML=THISTLE+"<span>You may also like</span>"; meta.append(b); }
+  if (s.code) meta.append(el("span",{class:"code",text:s.code}));
+  meta.append(el("span",{text:s.stream}));
+  if (s.room) meta.append(el("span",{text:s.room}));
+  if (s.lvl) meta.append(el("span",{text:LVL[s.lvl]}));
+  if (s.sponsor) meta.append(el("span",{text:"Sponsored by "+s.sponsor}));
+  const tw = el("div",{class:"tw"}, el("span",{class:"title",tabindex:"0",text:s.title}));
+  if (s.sum) tw.append(el("div",{class:"sum",role:"note",text:s.sum}));
+  const c = el("div",{class:"sess"+(also?" also":"")}, meta, tw);
+  if (s.people) c.append(el("div",{class:"people",text:s.people}));
+  if (!s.keynote) c.append(el("a",{class:"more",href:url(s),target:"_blank",rel:"noopener",title:pageOf(s)?"Opens the PHUSE "+(/Hands/.test(s.stream)?"workshops":"interactive sessions and panels")+" page with the full description":"The PHUSE agenda opens at the top. Search there for "+(s.code||s.title.slice(0,30)),text:pageOf(s)?"Read more on PHUSE "+(/Hands/.test(s.stream)?"workshops":"interactive sessions")+" page ↗":"Find on PHUSE agenda"+(s.code?" (search "+s.code+")":"")+" ↗"}));
+  if (why) c.append(el("div",{class:"why",text:why}));
+  return c;
+}
+function slotRow(p, inPlan, label){
+  const s=p.s, card = sessCard(s, p.why, p.also);
+  if (inPlan && !s.keynote){
+    const rm = el("button",{class:"linkbtn remove",type:"button",text:"Remove"});
+    rm.onclick = ()=>{ plan.picks = plan.picks.filter(x=>x!==p); renderPlan(); };
+    card.querySelector(".meta").append(rm);
+    const alts = S.filter(o=>o!==s && !o.keynote && o.day===s.day && (s.poster ? o.poster : (!o.poster && o.a<s.b && s.a<o.b)) && !plan.picks.some(x=>x.s===o));
+    if (alts.length){
+      const ul = el("ul");
+      for (const o of alts.slice(0,s.poster?40:12)){
+        const sw = el("button",{class:"linkbtn",type:"button",text: s.poster ? "Add" : "Swap in"});
+        sw.onclick = ()=>{
+          lastSwapped = o.n;
+          if (s.poster) plan.picks.push({s:o, why:"Added by you."});
+          else { plan.picks = plan.picks.filter(x=>!( !x.s.poster && x.s.day===o.day && x.s.a<o.b && o.a<x.s.b)); plan.picks.push({s:o, why:"Swapped in by you."}); }
+          renderPlan();
+        };
+        ul.append(el("li",{}, el("span",{}, (o.code? o.code+" · ":"")+o.title+(o.room?" ("+o.room+")":"")), sw));
+      }
+      card.append(el("details",{class:"alts"}, el("summary",{text:(s.poster? alts.length+" more posters in this session" : "Also on at this time: "+alts.length)}), ul));
+    }
+  }
+  return el("div",{class:"slot","data-n":String(s.n)}, el("div",{class:"time",text: label || (s.start+(s.end!==s.start?"–"+s.end:""))}), card);
+}
+
+/* ---------- composer ---------- */
+const q = document.getElementById("q"), status = document.getElementById("status");
+const EXAMPLE_PLANS = {
+ "Exploring open source": {
+  "summary": "A gentle route from SAS into R and Python, starting with how GxP teams govern and validate open source, then real migration stories from several sponsors. You finish with hands-on packages, Shiny and Python tooling you can try back at work.",
+  "picks": [
+   [
+    "f4716b",
+    "A practical start on how QC changes when open-source tools enter regulated work."
+   ],
+   [
+    "b16553",
+    "Shows how R and Python package versions are pinned, approved and audited in GxP."
+   ],
+   [
+    "ca5264",
+    "AstraZeneca's step by step process for bringing R into GxP reporting."
+   ],
+   [
+    "8d5de9",
+    "A validated R framework already used for client submissions, a good picture of what ready looks like."
+   ],
+   [
+    "846c00",
+    "Roche harmonising SDTM at scale in R, using the data standards you already know."
+   ],
+   [
+    "0457be",
+    "Where pharma really stands on moving from SAS to R, from interviews with biometrics leaders."
+   ],
+   [
+    "a4c2ec",
+    "MSD migrating a validated SAS codebase to R, and how they kept it trustworthy."
+   ],
+   [
+    "147ef6",
+    "How governed open-source environments are being set up for R and Python users."
+   ],
+   [
+    "7ed817",
+    "GSK moving trusted SAS macros into a validated R package, a path you may follow."
+   ],
+   [
+    "3b8c8b",
+    "Beginner tips on connecting SAS, R and Python in one workflow."
+   ],
+   [
+    "58a05f",
+    "Building ADaM datasets in R with admiral, using ADaM knowledge you already have."
+   ],
+   [
+    "a7cb8c",
+    "A demo of validated R packages for submissions."
+   ],
+   [
+    "75d1fa",
+    "Why open-source collaboration in pharma is hard and how teams make it last."
+   ],
+   [
+    "85a431",
+    "UCB's move to open source treated as a change of mindset, not just tools."
+   ],
+   [
+    "8d7e6f",
+    "Side by side heat maps in R and SAS, an easy bridge between the two."
+   ],
+   [
+    "6df0c4",
+    "An R package for QC of ADaM datasets, close to your daily work."
+   ],
+   [
+    "86ea3d",
+    "Using R and Quarto to fill in the ADRG automatically."
+   ],
+   [
+    "85efc5",
+    "One reporting document mixing R, SAS and Python."
+   ],
+   [
+    "a83497",
+    "Pfizer's lessons from moving platform and language at the same time."
+   ],
+   [
+    "db8190",
+    "Boehringer turning migrated SAS code into a qualified R package."
+   ],
+   [
+    "d9bf9d",
+    "The confidence side of switching from SAS to R, not just the syntax."
+   ],
+   [
+    "df7cb2",
+    "An open-source Python toolkit from CDISC Library to clinical tables."
+   ]
+  ]
+ },
+ "Sharpen my toolkit": {
+  "summary": "A week of practical SAS craft: reusable macros, faster runs, smarter comparisons and cleaner TLF set-up. Wednesday afternoon packs in short coding tips you can use on Monday morning.",
+  "picks": [
+   [
+    "f4716b",
+    "Fresh ideas on making validation lighter and more risk based."
+   ],
+   [
+    "737dc4",
+    "Turn your SAS programs into lineage diagrams that are easier to document and audit."
+   ],
+   [
+    "0ec502",
+    "Reusing reports automatically on new data with SAS Viya REST APIs."
+   ],
+   [
+    "5197fc",
+    "Why automation breaks when specs are trusted blindly, and what to check first."
+   ],
+   [
+    "b6c61d",
+    "SAS macros that trace every summary count back to the patients behind it."
+   ],
+   [
+    "de921d",
+    "Cut long run times by splitting study runs into parallel jobs."
+   ],
+   [
+    "c1d5da",
+    "A sponsor macro framework producing consistent RTF TLFs straight from ADaM."
+   ],
+   [
+    "2024a1",
+    "A SAS workflow flagging what each new SDTM transfer will break in ADaM and TLFs."
+   ],
+   [
+    "5d24e6",
+    "Program titles and footnotes once in a central file instead of in every program."
+   ],
+   [
+    "8f9006",
+    "How to write SAS macros general enough to reuse across studies."
+   ],
+   [
+    "492a40",
+    "A macro turning CTCAE grading rules into reusable logic instead of hard coding."
+   ],
+   [
+    "cf8f88",
+    "Using AI to catch human errors across hundreds of TLF outputs."
+   ],
+   [
+    "477f5c",
+    "A better PROC COMPARE with automatic sorting and clearer reports."
+   ],
+   [
+    "5903a8",
+    "Keeping QC tracking up to date automatically across reruns."
+   ],
+   [
+    "840535",
+    "AE swimmer plots built in SAS from ADAE."
+   ],
+   [
+    "ef3bff",
+    "Building quality into ADaM and TLF work up front so less needs fixing later."
+   ],
+   [
+    "9ee597",
+    "Fixing PROC MIXED convergence and covariance warnings in practice."
+   ],
+   [
+    "f85602",
+    "Toolkits that summarise data differences more usefully than default PROC COMPARE."
+   ],
+   [
+    "7c2ac3",
+    "A custom SAS function to look ahead to later records in a DATA step."
+   ],
+   [
+    "c98b08",
+    "Running R inside SAS programs and passing data between them."
+   ],
+   [
+    "8576ba",
+    "CALL EXECUTE explained, for dynamic data driven code without the pitfalls."
+   ],
+   [
+    "e65cd3",
+    "Regular expressions refreshed, still handy for cleaning and checking text."
+   ]
+  ]
+ },
+ "Pipelines and automation": {
+  "summary": "Built around automated data flows: from protocol and SDTM through define.xml to reporting, with plenty of Python and modern platforms. Tuesday and Wednesday focus on end to end pipelines and tools that keep specs and code in sync.",
+  "picks": [
+   [
+    "82ec79",
+    "Automating the path from study design all the way to define.xml."
+   ],
+   [
+    "0a7599",
+    "Treating clinical data as reusable products with an agent driven pipeline."
+   ],
+   [
+    "b7c1ea",
+    "Connecting SAS Viya, Databricks and other systems through REST APIs."
+   ],
+   [
+    "81e246",
+    "Metadata driven blinding built directly into clinical data pipelines."
+   ],
+   [
+    "846c00",
+    "Roche's highly automated SDTM harmonisation at scale."
+   ],
+   [
+    "8556f0",
+    "Machine readable data transfer agreements that make incoming data checks automatic."
+   ],
+   [
+    "8535bf",
+    "Building an integrated clinical data warehouse across study types."
+   ],
+   [
+    "fdab4d",
+    "Moving 130TB to Databricks without a classic migration."
+   ],
+   [
+    "e867e1",
+    "Biomedical Concepts carried from library through capture to submission."
+   ],
+   [
+    "dba3e8",
+    "Early data engineering lessons from launching a multi platform environment."
+   ],
+   [
+    "84e7fe",
+    "A Python platform linking protocols, specs and code into a queryable graph."
+   ],
+   [
+    "ebbd02",
+    "Using Git and CI to manage a validated computing environment."
+   ],
+   [
+    "6ee1e3",
+    "A Python web app for searching CDISC standards instead of reading PDFs."
+   ],
+   [
+    "1b6b8a",
+    "A Python tool drafting SDTM trial design domains from ClinicalTrials.gov data."
+   ],
+   [
+    "51f679",
+    "An automated SDTM pipeline from data drop to review ready outputs."
+   ],
+   [
+    "6877aa",
+    "One JSON metadata source driving SDTM mapping, define.xml and reviewer guides."
+   ],
+   [
+    "717c3e",
+    "Git based CI/CD for clinical data workflows across platforms."
+   ],
+   [
+    "73ab58",
+    "Generating SDTM and ADaM specs from central metadata to cut rework."
+   ],
+   [
+    "85efc5",
+    "Reproducible reports mixing Python, R and SAS."
+   ],
+   [
+    "518383",
+    "A Python pipeline where the spec is the code, so define.xml never drifts."
+   ],
+   [
+    "25dcce",
+    "A Python tool automating CRF annotation."
+   ],
+   [
+    "df7cb2",
+    "An open-source Python toolkit from CDISC Library to clinical tables."
+   ]
+  ]
+ },
+ "Curious about AI": {
+  "summary": "A grounded look at AI agents for SDTM, ADaM and TLFs, mixing honest evaluations with working examples from sponsors and CROs. Each day pairs what works today with how teams keep it auditable.",
+  "picks": [
+   [
+    "99dfc3",
+    "Hands-on look at which AI coding practices are genuinely ready for regulated work."
+   ],
+   [
+    "0a7599",
+    "How an agent driven pipeline can make clinical data AI ready."
+   ],
+   [
+    "b5defd",
+    "Why AI code can look right but be wrong, and how to trace it."
+   ],
+   [
+    "a6eec9",
+    "A sceptic's practical guide, a good antidote to the hype."
+   ],
+   [
+    "8640f4",
+    "Live polling on how teams across the industry are really adopting AI."
+   ],
+   [
+    "69581b",
+    "An honest test of agentic AI for SDTM mapping: where it works and where it doesn't."
+   ],
+   [
+    "a4c2ec",
+    "Multiple agents migrating validated code, and how MSD kept it trustworthy."
+   ],
+   [
+    "d1d0c3",
+    "Giving an AI assistant a live R session for iterative ADaM work."
+   ],
+   [
+    "be6f2c",
+    "Roche's lessons from rolling out AI coding assistants at scale."
+   ],
+   [
+    "cedced",
+    "A platform taking studies from SDTM mapping to TLFs with generative AI built in."
+   ],
+   [
+    "2173d3",
+    "AI agents acting as QC partners for SDTM, ADaM and TLF outputs."
+   ],
+   [
+    "8707c9",
+    "AI assisted TLF drafting from specs with the programmer kept in control."
+   ],
+   [
+    "16d145",
+    "Agents generating draft TLFs with automated checks and human review."
+   ],
+   [
+    "bef92f",
+    "Comparing humans, AI and both for writing CDISC validation rules."
+   ],
+   [
+    "230331",
+    "Turning Good AI Practice principles into steps programmers can follow."
+   ],
+   [
+    "14cdb7",
+    "A fully autonomous multi LLM pipeline generating ADaM datasets."
+   ],
+   [
+    "767052",
+    "Lessons from using an AI coding agent for ADaM work."
+   ],
+   [
+    "463842",
+    "AI turning Excel specs into reviewable code, with transparency."
+   ],
+   [
+    "cd9d75",
+    "Keeping people in the loop when AI helps create SDTM."
+   ],
+   [
+    "51cd55",
+    "Agentic AI drafting ADaM specifications from the SAP and protocol."
+   ],
+   [
+    "2169b4",
+    "Designing agentic AI so it can meet GxP expectations."
+   ]
+  ]
+ },
+ "Standards specialist": {
+  "summary": "Focused on the next layer of standards: USDM and digital protocols, the electronic SAP, and ARS and ARD. Your SDTM and define.xml knowledge is the starting point for sessions that show where these standards are heading.",
+  "picks": [
+   [
+    "82ec79",
+    "USDM and Biomedical Concepts carrying a study from protocol to define.xml."
+   ],
+   [
+    "44a87a",
+    "What CDISC learned testing emerging digital standards end to end."
+   ],
+   [
+    "1283d8",
+    "The electronic SAP built from Analysis Concepts and linked to USDM."
+   ],
+   [
+    "f9a78a",
+    "A live build of an eSAP generating analysis datasets and results."
+   ],
+   [
+    "2df0ab",
+    "Why AI in biometrics depends on standards and controlled metadata."
+   ],
+   [
+    "56a65a",
+    "Open-source R tooling producing ARDs and define.xml for ARS."
+   ],
+   [
+    "c3834b",
+    "Using ARS and ARDs as the basis for QC instead of finished tables."
+   ],
+   [
+    "83708e",
+    "What SDTMIG v4.0 changes, building on SDTM you already know well."
+   ],
+   [
+    "e867e1",
+    "Following Biomedical Concepts from library to submission."
+   ],
+   [
+    "698abc",
+    "How metadata repositories are becoming AI assisted knowledge hubs."
+   ],
+   [
+    "1a93f2",
+    "Hierarchical models for the analysis results data layer."
+   ],
+   [
+    "03d172",
+    "Lessons from a real Digital Data Flow and USDM v4.0 proof of concept."
+   ],
+   [
+    "6877aa",
+    "One metadata source driving SDTM mapping and define.xml in 360i workflows."
+   ],
+   [
+    "56ccbc",
+    "Putting the new SDTMIG 4.0 DC domain into practice."
+   ],
+   [
+    "73ab58",
+    "Generating specs from central metadata to cut rework."
+   ],
+   [
+    "c40614",
+    "Hands-on with connecting the digital protocol through to analysis ready data."
+   ],
+   [
+    "0b68b2",
+    "One sponsor's journey to standardised ARDs aligned with ARS."
+   ],
+   [
+    "9affa8",
+    "Why digital schedules of activities must be precise to drive systems."
+   ]
+  ]
+ },
+ "Statistics-minded": {
+  "summary": "A methods heavy plan built around estimands, causal inference and simulation, with the Analytics and Statistics stream as its backbone. Tuesday covers causal and real world methods; Wednesday brings newer methods for trial interpretation.",
+  "picks": [
+   [
+    "f4716b",
+    "The Sunday workshops are practical; this one on risk based QC fits working closely with programmers."
+   ],
+   [
+    "edb2e7",
+    "Measures how much safety information standard AE tables lose."
+   ],
+   [
+    "1c8288",
+    "Mapping intercurrent event strategies into ADaM so estimands are easier to explain."
+   ],
+   [
+    "ae66ae",
+    "Fit for purpose real world evidence supporting a label update without an RCT."
+   ],
+   [
+    "940f11",
+    "A clear primer on causal questions and the assumptions they rely on."
+   ],
+   [
+    "ff2148",
+    "Keeping estimand thinking consistent from data standards to final TLFs."
+   ],
+   [
+    "ee84db",
+    "A simulation comparing overlap weighting with trimmed IPTW under positivity violations."
+   ],
+   [
+    "ef5242",
+    "Automatically deriving intercurrent events to check programmed datasets."
+   ],
+   [
+    "828ac4",
+    "When regulators expect re-randomisation tests, with a simulation case study."
+   ],
+   [
+    "740793",
+    "Funnel plots for setting fairer monitoring thresholds over time."
+   ],
+   [
+    "a9f0ed",
+    "A practical framework for applying estimand strategies in trial data."
+   ],
+   [
+    "dbab26",
+    "A structured approach to bias in real world analyses."
+   ],
+   [
+    "9ee597",
+    "Troubleshooting mixed models with irregularly spaced longitudinal data."
+   ],
+   [
+    "fcae7c",
+    "Making statistical code and knowledge easy to find and reuse."
+   ],
+   [
+    "617343",
+    "Action limits as an early warning for quality risks."
+   ],
+   [
+    "006cf9",
+    "Simulation to interpret interim survival when PFS and OS disagree."
+   ],
+   [
+    "ff8036",
+    "Maraca plots showing what win odds alone can hide."
+   ],
+   [
+    "9f7b7d",
+    "Methods for agreement studies with crossed, nested binary outcomes."
+   ]
+  ]
+ },
+ "Real-world evidence and HTA": {
+  "summary": "Centred on Tuesday's Real-World Evidence stream, covering registries, OMOP, bias and estimands outside randomised trials. It starts with a panel bringing NICE and MHRA voices into the room.",
+  "picks": [
+   [
+    "f4716b",
+    "None of the Sunday workshops cover RWE; this one on modern QC is broadly useful."
+   ],
+   [
+    "b26917",
+    "Hear NICE and MHRA speakers on partnerships across industry, HTA and regulators."
+   ],
+   [
+    "766eb9",
+    "A reproducible workflow for the large literature sets behind HTA reviews."
+   ],
+   [
+    "662633",
+    "Turning free text patient diaries into structured clinical events."
+   ],
+   [
+    "cd7af6",
+    "Linking EDC to electronic health records to improve data quality."
+   ],
+   [
+    "ce765f",
+    "Why extending your computing environment to real world data is harder than it looks."
+   ],
+   [
+    "ae66ae",
+    "Real world evidence supporting an EMA label update where an RCT wasn't feasible."
+   ],
+   [
+    "a4bcb8",
+    "Bringing EQ-5D-5L data into OMOP for RWE and HTA use."
+   ],
+   [
+    "183010",
+    "Statistical pitfalls moving from randomised trials to real world data."
+   ],
+   [
+    "e73769",
+    "Applying the estimand framework to real world evidence studies."
+   ],
+   [
+    "4a89ce",
+    "Keeping ADaM stable when registry data and OMOP mappings keep changing."
+   ],
+   [
+    "dbab26",
+    "A framework for spotting bias in real world health equity analyses."
+   ],
+   [
+    "b88a51",
+    "Key points from the PHUSE white paper on real world data programming."
+   ],
+   [
+    "ab28d1",
+    "Exploring clinical and real world data across different views of time."
+   ],
+   [
+    "903931",
+    "Adopting AI in HTA programming without losing domain judgement."
+   ],
+   [
+    "5f8e10",
+    "Multi agent retrieval for drafting target trial emulation protocols."
+   ]
+  ]
+ },
+ "Visualisation and apps": {
+  "summary": "Built around the Data Visualisation and Application Development streams, moving from static TLFs to dashboards, Shiny apps and new plot types. Posters on Tuesday evening add plenty of visual ideas to borrow.",
+  "picks": [
+   [
+    "f4716b",
+    "Covers QC for visual outputs and apps alongside standard deliverables."
+   ],
+   [
+    "edb2e7",
+    "Visual alternatives that keep safety information standard AE tables lose."
+   ],
+   [
+    "36421d",
+    "Visual analytics for judging virtual control groups in toxicology."
+   ],
+   [
+    "e0101e",
+    "A Shiny app turning efficacy data into interactive waterfall, swimmer and KM plots."
+   ],
+   [
+    "0ec502",
+    "Generating dashboards automatically on new data."
+   ],
+   [
+    "e03d57",
+    "Turning static TLF reports into interactive dashboards."
+   ],
+   [
+    "af680f",
+    "How Boehringer validates Shiny apps so results can support decisions."
+   ],
+   [
+    "9aa231",
+    "A modular open-source teal app replacing a proprietary review tool."
+   ],
+   [
+    "1c22a2",
+    "Controlled, up to date access to clinical data through Qlik dashboards."
+   ],
+   [
+    "8caf03",
+    "A tool for exploring SAS, XPT, JSON and XML datasets in one place."
+   ],
+   [
+    "8a176b",
+    "Fast, study level Shiny apps replacing commercial data review tools."
+   ],
+   [
+    "740793",
+    "Longitudinal funnel plots for monitoring thresholds."
+   ],
+   [
+    "7f8a3d",
+    "Heat maps and stacked plots showing several dimensions at once."
+   ],
+   [
+    "28dab9",
+    "Visual fingerprints revealing patient journey patterns swimmer plots miss."
+   ],
+   [
+    "b40fa6",
+    "Interactive Shiny apps for exploring data beyond standard TLFs."
+   ],
+   [
+    "840535",
+    "Swimmer plots for adverse events showing timing and severity."
+   ],
+   [
+    "7133a0",
+    "A Shiny app making SDTM pooling far less manual."
+   ],
+   [
+    "146a60",
+    "CDISC CORE conformance checks behind a simple Shiny interface."
+   ],
+   [
+    "ff8036",
+    "Maraca plots for hierarchical composite endpoints."
+   ],
+   [
+    "d20b60",
+    "A web tool building patient disposition flows with GenAI and review."
+   ]
+  ]
+ },
+ "Submissions and regulators": {
+  "summary": "Follows the submission package from define.xml and reviewer guides to Dataset-JSON and disclosure, with regulators in the room on Monday and Tuesday. It closes with the panel on where submissions are heading next.",
+  "picks": [
+   [
+    "82ec79",
+    "Automating the route from study design to define.xml."
+   ],
+   [
+    "b26917",
+    "NICE and MHRA speakers on what makes industry and regulator partnerships work."
+   ],
+   [
+    "e13bd0",
+    "Next Generation Submission practices that shorten timelines."
+   ],
+   [
+    "5197fc",
+    "Why trusting specs and define.xml blindly breaks automation."
+   ],
+   [
+    "b69a1e",
+    "Planning transparency earlier to avoid rework in document disclosure."
+   ],
+   [
+    "da3626",
+    "Why delivering the CRT package isn't the same as being submission ready."
+   ],
+   [
+    "803c31",
+    "Hands-on anonymisation of clinical documents for CTIS under EU CTR."
+   ],
+   [
+    "6228a5",
+    "Dataset-JSON, the successor to XPT, with the FDA pilot and tools."
+   ],
+   [
+    "6a9d8b",
+    "Building define.xml specs faster with LLMs and Pinnacle 21."
+   ],
+   [
+    "097366",
+    "Making AI explainable and auditable in clinical data work."
+   ],
+   [
+    "f3f08d",
+    "Generating define.xml, SDRG and ADRG from verified data lineage."
+   ],
+   [
+    "10c840",
+    "How Roche is reshaping eSubmission support."
+   ],
+   [
+    "230331",
+    "Good AI Practice principles turned into practical submission steps."
+   ],
+   [
+    "8fadd9",
+    "EMA and industry on how AI and digital evidence will reshape submissions."
+   ],
+   [
+    "11781c",
+    "Common define.xml 2.1 mistakes and how to avoid them."
+   ],
+   [
+    "86ea3d",
+    "Filling in the ADRG automatically from datasets and metadata."
+   ],
+   [
+    "9479d8",
+    "Lessons from unexpected CBER requests across three years of submissions."
+   ],
+   [
+    "38cfab",
+    "LLMs extracting protocol information for regulatory disclosure."
+   ],
+   [
+    "1965d6",
+    "What FDA guidance on missing PRO data means in practice."
+   ],
+   [
+    "518383",
+    "Keeping specs, code and define.xml in sync automatically."
+   ]
+  ]
+ },
+ "New people manager": {
+  "summary": "Mostly leadership sessions from the People Leadership and Professional Development streams, with a thread of open source and AI so you can guide your team on both. Wednesday is almost entirely about leading people well.",
+  "picks": [
+   [
+    "f4716b",
+    "Group exercises on how QC changes with AI, open source and global teams."
+   ],
+   [
+    "b26917",
+    "Discussion of the people skills that make partnerships work."
+   ],
+   [
+    "a6aa2b",
+    "A first hand account of moving from programmer to leading people."
+   ],
+   [
+    "18abcb",
+    "Adapting training for new joiners on your team."
+   ],
+   [
+    "0457be",
+    "A quick read on where the industry stands with open source and AI."
+   ],
+   [
+    "a4c2ec",
+    "How one team built trust in AI agents, useful when guiding your own."
+   ],
+   [
+    "7bd666",
+    "Delegating ownership rather than tasks without losing control."
+   ],
+   [
+    "8cba8c",
+    "Breaking the cycle of crunch and burnout in programming teams."
+   ],
+   [
+    "8ad9a6",
+    "Why people stay or leave, especially in remote and hybrid teams."
+   ],
+   [
+    "d616b5",
+    "Building psychological safety so your team feels able to speak up."
+   ],
+   [
+    "8846d9",
+    "A plain English explanation of AI agents for leaders."
+   ],
+   [
+    "4abebd",
+    "Balancing agile ambitions with GxP reality as a business lead."
+   ],
+   [
+    "acd75a",
+    "Growth and identity when stepping up to bigger leadership roles."
+   ],
+   [
+    "85a431",
+    "Managing a move to open source as a change in identity, not just tools."
+   ],
+   [
+    "e5ee5b",
+    "Rethinking career paths around skills rather than job titles."
+   ],
+   [
+    "035164",
+    "How a graduate programme brings new programmers up to speed."
+   ],
+   [
+    "041065",
+    "Getting escalation right so issues reach the right level in time."
+   ],
+   [
+    "5da2f5",
+    "Moving a team from compliance first to ownership of outcomes."
+   ],
+   [
+    "e22883",
+    "Coaching stories and phrases you can use with your team."
+   ],
+   [
+    "423313",
+    "Interviewing programmers when candidates can lean on AI."
+   ],
+   [
+    "f1e8e3",
+    "Unlocking neurodivergent strengths in your team."
+   ]
+  ]
+ }
+};  // ready-made AI plans for the unedited examples (no AI call needed)
+function storedPlan(text){
+  const ex = EXAMPLES.find(e=>e[1]===text); const p = ex && EXAMPLE_PLANS && EXAMPLE_PLANS[ex[0]];
+  if (!p) return null;
+  return {summary:p.summary, picks:p.picks.map(([k,why])=>{ const s=byKey(k); return s ? {n:s.n, why} : null; }).filter(Boolean)};
+}
+const EXAMPLES = [
+ ["Exploring open source","I'm a senior SAS programmer, comfortable with SDTM and ADaM. I want to learn how teams use open-source tools like R and Python in GxP work, and I'm new to both."],
+ ["Sharpen my toolkit","I work mostly in SAS on ADaM and TLFs. I want to pick up new SAS techniques and macro tricks to make my programs faster, reusable and easier to validate."],
+ ["Pipelines and automation","I build clinical data pipelines in Python. I want to see how others automate SDTM, define.xml and reporting, and what's new in data engineering."],
+ ["Curious about AI","I'm a statistical programmer at a CRO with a few years' experience. I want to see how AI agents are really being used for SDTM, ADaM and TLFs, beyond the hype."],
+ ["Standards specialist","I work in CDISC standards and know SDTM and define.xml well. I want to learn about USDM, digital protocols and ARS/ARD."],
+ ["Statistics-minded","I'm a statistician working closely with programmers. I want to learn more about estimands, causal inference, simulation and new statistical methods in trials."],
+ ["Real-world evidence and HTA","I support HTA and market access submissions. I want to learn about real-world evidence, registries, OMOP and estimands outside randomised trials."],
+ ["Visualisation and apps","I produce TLFs every day. I want to learn how teams build interactive visualisations, dashboards and apps for exploring trial data."],
+ ["Submissions and regulators","I prepare submission packages. I want to learn what regulators expect next, from define.xml and reviewer guides to Dataset-JSON and disclosure."],
+ ["New people manager","I've just started managing a small programming team. I want to get better at leading people and also keep up with open source and AI."]
+];
+const chips = document.getElementById("chips");
+for (const [label,text] of EXAMPLES){ const b=el("button",{class:"chip",type:"button",title:text,text:label}); b.onclick=()=>{ q.value=text; q.focus(); status.textContent="Example added. Edit it to fit you, then build your plan."; }; chips.append(b); }
+document.getElementById("hUse").onclick=()=>{
+  const r=document.getElementById("hRole").value.trim(), k=document.getElementById("hKnow").value.trim(), l=document.getElementById("hLearn").value.trim();
+  if(!r&&!k&&!l){ status.textContent="Fill in at least one box."; return; }
+  q.value=[r&&("I'm a "+r.replace(/^(i'?m |i am )?(an? )?/i,"")+"."), k&&("I already know "+k+" well."), l&&("I want to learn about "+l+".")].filter(Boolean).join(" ");
+  document.getElementById("helper").open=false; q.focus(); status.textContent="Description written. Adjust it if you like, then build your plan.";
+};
+const loader=document.getElementById("loader"), stopsEl=[...document.querySelectorAll("#stops li")], loadcap=document.getElementById("loadcap");
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+let stageTimer=null, hideTimer=null;
+function startLoader(fast){
+  document.getElementById("planSec").hidden = false;
+  document.getElementById("planSec").classList.add("building");
+  clearInterval(stageTimer); clearTimeout(hideTimer);
+  loader.hidden=false; document.getElementById("subway").removeAttribute("hidden"); document.getElementById("duke").setAttribute("hidden","");
+  stopsEl.forEach((x,i)=>x.classList.toggle("on", i===0));
+  loadcap.textContent="The Outer Circle, Glasgow Subway. Next stop: your programme.";
+  let i=0; stageTimer=setInterval(()=>{ if (i < (fast?3:2)){ i++; stopsEl[i].classList.add("on"); } }, fast?450:2500);
+}
+function finishLoader(){
+  document.getElementById("planSec").classList.remove("building");
+  clearInterval(stageTimer); stopsEl.forEach(x=>x.classList.add("on"));
+  document.getElementById("subway").setAttribute("hidden","");
+  const duke=document.getElementById("duke"), cone=duke.querySelector(".cone");
+  duke.removeAttribute("hidden"); cone.style.animation="none"; void cone.getBoundingClientRect(); cone.style.animation="";
+  loadcap.textContent="Plan ready. The Duke approves.";
+  hideTimer=setTimeout(()=>{ loader.hidden=true; }, 9000);
+}
+function stopLoader(){ clearInterval(stageTimer); loader.hidden=true; document.getElementById("planSec").classList.remove("building"); }
+let quickBusy=false;
+document.getElementById("goQuick").onclick = async ()=>{
+  const t=q.value.trim(); if(!t){ status.textContent="Describe your interests first, or tap one of the suggestions."; q.focus(); return; }
+  if (quickBusy) return; quickBusy=true; status.textContent="";
+  startLoader(true); document.getElementById("planSec").scrollIntoView({behavior:"smooth",block:"start"}); await wait(1900);
+  const res = quickPlan(t);
+  if (res.nomatch){ stopLoader(); setPlan(res, false); status.textContent=""; }
+  else { setPlan(res, false); finishLoader(); status.textContent="Done. Your plan is below."; }
+  quickBusy=false;
+};
+const PROXY_URL = "https://euconnect26-planner.smccawille88.workers.dev"; // Cloudflare Worker URL; empty = ask for an API key instead
+let sample=null, busy=false, apiKey="";
+const btnAI=document.getElementById("goClaude"), hint=document.getElementById("engineHint"), keyBox=document.getElementById("keyBox"), keyIn=document.getElementById("apiKey");
+try{ apiKey = sessionStorage.getItem("ec26key")||""; }catch(e){}
+function aiReady(){ return !!sample || !!PROXY_URL || !!apiKey; }
+function refreshAI(){
+  if (sample){ btnAI.hidden=false; keyBox.hidden=true; hint.textContent="Build my programme reads every title and topic and explains each pick."; return; }
+  if (window.claude && window.claude.use){ btnAI.hidden=true; keyBox.hidden=true; return; }
+  if (!PROXY_URL){ btnAI.hidden=true; keyBox.hidden=true; hint.textContent="Quick match runs in your browser using topic tags."; return; }
+  btnAI.hidden=false; keyBox.hidden=true; hint.textContent="Build my programme uses AI to read every session and explain each pick. It takes about 30 seconds."; return;
+  if (PROXY_URL){ document.getElementById("saveKey").textContent="Use passcode"; keyBox.querySelector("summary").textContent="AI planning: enter the passcode"; keyIn.placeholder="Passcode"; keyIn.setAttribute("aria-label","Passcode"); keyBox.querySelector("p").textContent="Ask the organiser for the passcode. It is kept in this tab only and cleared when you close it."; }
+  hint.textContent = apiKey ? "AI planning is on. Build my programme reads every session and explains each pick." : "Build my programme uses AI and needs the passcode. Quick match works for everyone.";
+}
+(async()=>{ try{ sample = await window.claude?.use?.("sample"); }catch(e){ sample=null; } refreshAI(); })();
+refreshAI();
+document.getElementById("saveKey").onclick=()=>{ apiKey=keyIn.value.trim(); keyIn.value=""; try{ sessionStorage.setItem("ec26key",apiKey); }catch(e){} keyBox.open=false; refreshAI(); status.textContent = apiKey ? (PROXY_URL?"Passcode set.":"Key set for this tab.") : ""; };
+document.getElementById("clearKey").onclick=()=>{ apiKey=""; keyIn.value=""; try{ sessionStorage.removeItem("ec26key"); }catch(e){} refreshAI(); status.textContent=PROXY_URL?"Passcode removed.":"Key removed."; };
+async function askAPI(q){
+  const prompt = {fixed: PROMPT_FIXED(), prompt: promptUser(q)};
+  if (PROXY_URL){
+    const r = await fetch(PROXY_URL,{method:"POST",headers:{"content-type":"application/json","x-passcode":apiKey},body:JSON.stringify(prompt)});
+    if (!r.ok){ const err=new Error("http"); err.code = r.status===401?"bad_pass":r.status===429?"rate_limited":"upstream_error"; throw err; }
+    const text=(await r.json()).text||""; const m=text.match(/\{[\s\S]*\}/); if(!m){ const err=new Error("json"); err.code="invalid_json"; throw err; }
+    return JSON.parse(m[0]);
+  }
+  const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:4000,messages:[{role:"user",content:prompt.fixed+"\n\n"+prompt.prompt}]})});
+  if (!r.ok){ const err=new Error("http"); err.code = r.status===401?"bad_key":r.status===429?"rate_limited":"upstream_error"; throw err; }
+  const j = await r.json(); const text=(j.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+  const m = text.match(/\{[\s\S]*\}/); if(!m){ const err=new Error("json"); err.code="invalid_json"; throw err; }
+  return JSON.parse(m[0]);
+}
+btnAI.onclick = async ()=>{
+  const t=q.value.trim(); if(!t){ status.textContent="Describe your interests first, or tap one of the suggestions."; q.focus(); return; }
+  if (busy) return;
+  if (!aiReady()){ keyBox.open=true; keyIn.focus(); status.textContent= PROXY_URL ? "Enter the passcode to use AI planning, or use Quick match." : "Paste an API key to use AI planning, or use Quick match."; return; }
+  const prompt = sample ? claudePrompt(t) : t;
+  const stored = storedPlan(t);
+  busy=true; btnAI.disabled=true; status.textContent= stored ? "" : "Reading all 238 sessions. This can take up to a minute."; startLoader(!!stored); document.getElementById("planSec").scrollIntoView({block:"start"});
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  try{
+    const res = stored ? (await wait(1900), stored) : sample ? await sample.json(prompt) : await askAPI(prompt);
+    const seen=new Set(), picks=[];
+    for (const p of (res && Array.isArray(res.picks) ? res.picks : [])){
+      const s=S[Number(p.n)]; if(!s||s.keynote||seen.has(s.n)) continue;
+      if (!s.poster && picks.some(x=>!x.s.poster && x.s.day===s.day && x.s.a<s.b && s.a<x.s.b)) continue;
+      seen.add(s.n); picks.push({s, why:String(p.why||"")});
+    }
+    if (picks.length){
+      const qp = quickPlan(t).picks;
+      if (!picks.some(x=>x.s.poster)){
+        let k=0; for (const x of qp) if (x.s.poster && k<3 && !picks.some(y=>!y.s.poster && y.s.day===x.s.day && y.s.a<x.s.b && x.s.a<y.s.b)){ picks.push({s:x.s, why:"A poster close to your interests: "+x.why.replace(/^[^:]*:\s*/,"")}); k++; }
+      }
+      if (!picks.some(x=>x.s.day===15)){ const w=qp.find(x=>x.s.day===15); if (w) picks.push({s:w.s, why:w.why}); }
+    }
+    if (picks.length && alsoOn()){ const ex=addAlsoLike(picks, t); for (const e of ex){ for (let i=picks.length-1;i>=0;i--) if (overlap(picks[i].s,e.s)) picks.splice(i,1); picks.push(e); } }
+    if (!picks.length){ stopLoader(); setPlan({summary:String(res?.summary||"No strong matches yet. Try saying your role, what you already know well and what you want to learn."), picks:[], nomatch:true}, false); status.textContent=""; return; }
+    for (const s of S.filter(s=>s.keynote)) picks.push({s, why:"Keynote: everyone's in the main auditorium."});
+    setPlan({summary:String(res?.summary||"Here is your plan."), picks}, false);
+    finishLoader(); status.textContent="Done. Your plan is below.";
+  }catch(e){
+    stopLoader();
+    const code=e&&e.code;
+    if (code==="not_granted"||code==="sampling_disabled"||code==="not_declared"||code==="capability_disabled"){ btnAI.hidden=true; status.textContent="AI planning isn't available here, so use Quick match."; }
+    else if (code==="bad_key") status.textContent="That API key was refused. Check it and set it again.";
+    else if (code==="bad_pass"){ apiKey=""; try{ sessionStorage.removeItem("ec26key"); }catch(e){} refreshAI(); keyBox.open=true; keyIn.focus(); status.textContent="That passcode isn't right. Enter it again."; }
+    else if (code==="rate_limited") status.textContent="Too many requests just now. Try again in a minute, or use Quick match.";
+    else if (code==="cancelled") status.textContent="";
+    else status.textContent="That didn't come back cleanly. Try again, or use Quick match.";
+  }finally{ busy=false; btnAI.disabled=false; }
+};
+
+/* ---------- export ---------- */
+function planText(){
+  const picks = plan.picks.slice().sort((x,y)=>x.s.day-y.s.day||x.s.a-y.s.a||x.s.n-y.s.n);
+  const posters = picks.filter(p=>p.s.poster);
+  let out="My PHUSE EU Connect 2026 plan\n", d=0, pdone=false;
+  for (const p of picks){
+    if(p.s.day!==d){ d=p.s.day; out+="\n"+DAYS[d]+"\n"; }
+    const room = p.s.room?" ("+p.s.room+")":"";
+    if (p.s.poster){
+      if (pdone) continue; pdone=true; const s0=p.s;
+      out+=`${s0.start}-${s0.end}  Poster session${room}, suggested visits:\n`;
+      posters.forEach((q,i)=>{ out+=`    ${fmt(s0.a+5+i*15)}  ${q.s.code}  ${q.s.title}${q.also?"  [You may also like]":""}\n`; });
+      continue;
+    }
+    const who = p.s.keynote && p.s.people ? p.s.people.split(" · ")[0] : "";
+    const label = p.s.keynote ? "KEYNOTE"+(who?" ("+who+")":"")+":  " : /Hands-on/.test(p.s.stream) ? "WORKSHOP:  " : (p.s.code?p.s.code+"  ":"");
+    out+=`${p.s.start}-${p.s.end}  ${label}${p.s.title}${room}${p.also?"  [You may also like]":""}\n`;
+  }
+  return out;
+}
+const SALTIRE='<svg class="saltire" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#005eb8"/><path d="M0 0 L30 20 M30 0 L0 20" stroke="#fff" stroke-width="4"/></svg>';
+function braw(btn, msg){
+  if (!btn || btn.dataset.busy) return; btn.dataset.busy="1";
+  const old=btn.innerHTML; btn.classList.add("brawed"); btn.innerHTML=SALTIRE+"<span>"+(msg||"Ken! Copied")+"</span>";
+  setTimeout(()=>{ btn.innerHTML=old; btn.classList.remove("brawed"); delete btn.dataset.busy; }, 2000);
+}
+async function copy(text, noteEl, okMsg, btn, msg){
+  try{ await navigator.clipboard.writeText(text); noteEl.textContent=okMsg; braw(btn, msg); }
+  catch(e){ const ta=el("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.append(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); noteEl.textContent = ok?okMsg:"Copy was blocked. Select the text and copy it yourself."; if (ok) braw(btn, msg); }
+}
+document.getElementById("copyPlan").onclick = e=>copy(planText(), status, "Plan copied.", e.currentTarget);
+const pad=n=>String(n).padStart(2,"0");
+function ics(){
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Connect planner//EN","CALSCALE:GREGORIAN"];
+  for (const p of plan.picks){ const s=p.s; const dt=t=>`202611${pad(s.day)}T${t.replace(":","")}00Z`;
+    lines.push("BEGIN:VEVENT","UID:"+(s.id||("k"+s.n))+"@euconnect26","DTSTAMP:20261030T000000Z","DTSTART:"+dt(s.start),"DTEND:"+dt(s.end===s.start?s.start:s.end),
+      "SUMMARY:"+esc((s.code?s.code+" ":"")+s.title),"LOCATION:"+esc((s.room?s.room+", ":"")+"SEC Glasgow"),"DESCRIPTION:"+esc((p.why||"")+"\\n"+url(s)),"END:VEVENT"); }
+  lines.push("END:VCALENDAR"); return lines.join("\r\n");
+}
+const esc=t=>String(t).replace(/[\\;,]/g,m=>"\\"+m).replace(/\n/g,"\\n");
+
+
+/* ---------- view, pdf, share ---------- */
+document.getElementById("vList").onclick=()=>setView("list");
+document.getElementById("vTlf").onclick=()=>setView("tlf");
+const standalone = !(window.claude && window.claude.use);
+if (standalone){ document.getElementById("pdf").hidden=false; document.getElementById("share").hidden=false; }
+document.getElementById("pdf").onclick=()=>{ setView("tlf"); setTimeout(()=>window.print(),150); };
+document.getElementById("share").onclick=e=>{ const btn=e.currentTarget;
+  const code = plan.picks.map(p=>(p.also?"x":"")+keyOf(p.s)).join("-");
+  copy((/^https?:$/.test(location.protocol)?location.origin+location.pathname:"https://smccawille88.github.io/euconnect26-planner/")+"#p-"+code, status, "Link copied. Anyone opening it sees this plan.", btn, "Ken! Copied");
+};
+const KEYS = S.filter(s=>s.keynote);
+function keyOf(s){ return s.id ? s.id.slice(0,6) : "k"+KEYS.indexOf(s); }
+function byKey(k){ return k.startsWith("k") ? KEYS[parseInt(k.slice(1),10)] : S.find(s=>s.id && s.id.slice(0,6)===k); }
+function sharedPlan(){
+  const h=(location.hash||"").replace(/^#/,""); if(!h.startsWith("p-")) return null;
+  const picks=[];
+  for (const t of h.slice(2).split("-")){ const also=t.startsWith("x"); const s0=byKey(also?t.slice(1):t); if(s0 && !picks.some(p=>p.s===s0)) picks.push({s:s0, why:s0.keynote?"Keynote: everyone's in the main auditorium.":"", also}); }
+  return picks.length ? {summary:"A shared programme. Build your own above, or swap sessions below.", picks} : null;
+}
+/* ---------- example at rest ---------- */
+const EX = "I\u2019m a senior SAS programmer, comfortable with SDTM and ADaM. I want to learn how teams use R and AI agents in GxP work.";
+q.value = "";
+const ex = quickPlan(EX); ex.summary = "Example for: “"+EX+"” Type your own above and press Quick match."; const shared = standalone ? sharedPlan() : null;
+if (shared) setPlan(shared, false);
+</script>
+
+</body>
+</html>
