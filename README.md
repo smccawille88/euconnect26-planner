@@ -1,10 +1,10 @@
-# EU Connect 2026 planner (unofficial tool)
+# EU Connect 2026 planner (beta)
 
 **Live site:** https://smccawille88.github.io/euconnect26-planner/
 
 A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 November 2026). Describe your role, what you already know well and what you want to learn, and it builds a clash-free plan from all 238 sessions, workshops, panels and posters.
 
-> This is an unofficial tool. It is not run or endorsed by PHUSE.
+> A personal community project, currently in beta and independent of PHUSE's official tools.
 
 ## Two ways to build a plan
 
