@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Glasgow Connect Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow reading column; composer on top, the plan as a day-by-day time rail, then reference sections. */
+:root{
+  --bg:#f3f5fb; --surface:#ffffff; --ink:#14214f; --muted:#56618a; --line:#d8deee;
+  --accent:#0f8278; --accent-ink:#ffffff; --accent-soft:#e2f6f3; --loch:#1c3687; --loch-soft:#e4e9f7;
+  --btn:#3cc1b4; --btn-ink:#14214f;
+  --warn:#9a5b00;
+  --bronze:#2b3044; --band:#1c3687; --band-ink:#ffffff; --band-muted:#c9d3f2; --band-accent:#3cc1b4;
+  --f-display:"Montserrat", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1533; --surface:#162047; --ink:#e8ecf8; --muted:#a3add0; --line:#2a3566;
+  --accent:#5fd6ca; --accent-ink:#0b1b3d; --accent-soft:#143a46; --loch:#8fa6ff; --loch-soft:#1f2c62;
+  --btn:#3cc1b4; --btn-ink:#0e1533; --warn:#e0a54a;
+  --bronze:#c5cbe0; --band:#13245e; --band-ink:#ffffff; --band-muted:#b3bfe6; --band-accent:#3cc1b4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1533; --surface:#162047; --ink:#e8ecf8; --muted:#a3add0; --line:#2a3566;
+  --accent:#5fd6ca; --accent-ink:#0b1b3d; --accent-soft:#143a46; --loch:#8fa6ff; --loch-soft:#1f2c62;
+  --btn:#3cc1b4; --btn-ink:#0e1533; --warn:#e0a54a;
+  --bronze:#c5cbe0; --band:#13245e; --band-ink:#ffffff; --band-muted:#b3bfe6; --band-accent:#3cc1b4; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body);margin:0}
+.wrap{max-width:860px;margin:-22px auto 0;position:relative;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,6vw,3.1rem);font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:700}
+.eyebrow{font:500 .78rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--loch)}
+.lede{color:var(--muted);max-width:60ch;margin:.6rem 0 0}
+.band{background:var(--band);color:var(--band-ink);border-bottom:4px solid var(--band-accent)}
+.band .inner{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 40px;display:grid;gap:.5rem}
+.demo-flag{justify-self:start;font:600 .75rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:#14214f;background:var(--band-accent);border-radius:999px;padding:3px 11px}
+.band .logo{justify-self:start;display:inline-flex;background:#fff;border-radius:10px;padding:6px 12px;margin-bottom:.4rem}
+.band .logo img{height:34px;width:auto;display:block}
+.band .eyebrow{color:var(--band-accent)}
+.band .lede{color:var(--band-muted)}
+.band .dates{display:flex;flex-wrap:wrap;gap:6px;margin-top:.4rem}
+.band .dates span{font:600 .8rem var(--f-body);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:2px 10px;color:var(--band-ink)}
+.composer{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 24px rgba(10,20,60,.12);padding:18px;display:grid;gap:12px}
+label.q{font-weight:600}
+textarea::placeholder{color:var(--muted);opacity:.55;font-style:italic}
+
+textarea{width:100%;min-height:96px;resize:vertical;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+textarea:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips,.examples{display:flex;flex-wrap:wrap;gap:6px}
+.tip{margin:0;font-size:.9rem;color:var(--muted)}
+.tip b{color:var(--ink);font-weight:600}
+.helper summary{cursor:pointer;font-size:.9rem;color:var(--accent);font-weight:600}
+.helpgrid{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:8px 12px;align-items:center;margin:10px 0}
+.helpgrid label{font-size:.88rem;color:var(--muted)}
+.helpgrid input{font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+@media (max-width:520px){.helpgrid{grid-template-columns:1fr}}
+.chip{font:inherit;font-size:.86rem;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:600 .95rem var(--f-body);border-radius:10px;padding:10px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn);text-transform:uppercase;letter-spacing:.03em;font-size:.88rem}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.small{padding:6px 11px;font-size:.85rem}
+.hint{font-size:.85rem;color:var(--muted)}
+#planSec.building #plan,#planSec.building #summary{opacity:.25;transition:opacity .2s}
+.status{font-size:.9rem;color:var(--muted);min-height:1.4em}
+section{margin-top:2.4rem}
+.planhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:end;margin-bottom:.6rem}
+.summary{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin:.4rem 0 1rem;max-width:72ch}
+.tag-example{font:500 .72rem var(--f-mono);color:var(--warn);letter-spacing:.04em;text-transform:uppercase}
+.day{margin-top:1.4rem}
+.day h3{font-size:1.05rem;display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
+.day h3 .d{font:500 .8rem var(--f-mono);color:var(--muted)}
+.slot{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.slot:last-child{border-bottom:0}
+.time{font:500 .85rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;padding-top:3px}
+.sess{min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.82rem;color:var(--muted)}
+.code{font:500 .76rem var(--f-mono);background:var(--loch-soft);color:var(--loch);border-radius:6px;padding:1px 7px}
+.title{font-weight:600;font-size:1.02rem;margin:3px 0 2px;display:block;color:var(--ink);text-decoration:none}
+.title{cursor:help}
+.more{display:inline-block;margin-top:3px;font-size:.8rem;color:var(--accent);text-decoration:none}
+.more:hover{text-decoration:underline}
+.sess{position:relative}
+.sum{display:none;position:absolute;z-index:5;left:0;top:100%;margin-top:4px;width:min(460px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:3px solid var(--loch);border-radius:10px;padding:10px 12px;font-size:.88rem;line-height:1.45;box-shadow:0 10px 28px rgba(10,20,60,.18)}
+.tw{position:relative}
+.tw:hover .sum,.title:focus-visible + .sum{display:block}
+.sess:hover,.sess:focus-within{z-index:20}
+@media (hover:none){.sum{display:block;position:static;box-shadow:none;border:0;border-left:2px solid var(--loch);border-radius:0;padding:2px 0 2px 10px;margin-top:4px;color:var(--muted);width:auto}}
+.people{font-size:.86rem;color:var(--muted)}
+.glance{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 1rem;display:grid;gap:10px}
+.glance h3{font-size:1rem;margin:0}
+.mix{display:flex;height:14px;border-radius:999px;overflow:hidden;gap:2px;background:var(--line)}
+.mix span{display:block;min-width:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--muted)}
+.legend .lg{display:inline-flex;align-items:center;gap:6px}
+.legend .lg b{color:var(--ink);font-variant-numeric:tabular-nums}
+.legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tracks{display:grid;gap:6px;margin-top:4px}
+.track{display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px;align-items:center}
+.tlab{font:500 .78rem var(--f-mono);color:var(--muted)}
+.lane{position:relative;height:22px;background:var(--bg);border-radius:6px}
+.track.axis .lane{height:14px;background:none}
+.tick{position:absolute;top:0;transform:translateX(-50%);font:500 .68rem var(--f-mono);color:var(--muted);white-space:nowrap}
+.blk{position:absolute;top:3px;bottom:3px;border-radius:4px;background:var(--loch)}
+.blk.also{background:var(--accent-soft);border:2px solid var(--btn)}
+.blk.key{opacity:.45}
+.glance-note{margin:0;font-size:.8rem}
+@media print{.glance{display:none!important}}
+.alsobox{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin:0 0 1rem}
+.alsobox h3{font-size:1rem;margin:0}
+.alsobox p{margin:2px 0 8px}
+.alsobox ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.alsobox li{display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:baseline}
+.alsobox li > span{min-width:0}
+.alsobox .alsosum{display:block;font-size:.88rem;color:var(--muted);margin-top:2px}
+.alsobox li{padding-bottom:4px}
+.alsobox .when{font:500 .8rem var(--f-mono);color:var(--muted)}
+.alsobox a{color:var(--ink);font-weight:600;text-decoration-color:var(--accent)}
+.loader{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:12px 14px}
+.loadart{position:relative}.loadart>svg{width:190px;height:auto;display:block}.trainlayer{position:absolute;left:0;top:0;width:200px;height:140px;transform-origin:0 0;transform:scale(.95);pointer-events:none}#subway[hidden]+.trainlayer{display:none}.trainbox{position:absolute;left:-14px;top:-6px;width:29px;height:12px;transform-origin:14px 6px;animation:ride 3.2s linear infinite;will-change:transform}.trainbox svg{display:block;width:29px;height:12px}@media (max-width:520px){.trainlayer{transform:scale(.6)}}@media (prefers-reduced-motion:reduce){.trainbox{animation:none;transform:translate(60px,26px)}}@keyframes ride{0.00%{transform:translate(60.0px,26.0px) rotate(0.0deg)}1.25%{transform:translate(65.5px,26.0px) rotate(0.0deg)}2.50%{transform:translate(70.9px,26.0px) rotate(0.0deg)}3.75%{transform:translate(76.4px,26.0px) rotate(0.0deg)}5.00%{transform:translate(81.8px,26.0px) rotate(0.0deg)}6.25%{transform:translate(87.3px,26.0px) rotate(0.0deg)}7.50%{transform:translate(92.7px,26.0px) rotate(0.0deg)}8.75%{transform:translate(98.2px,26.0px) rotate(0.0deg)}10.00%{transform:translate(103.6px,26.0px) rotate(0.0deg)}11.25%{transform:translate(109.1px,26.0px) rotate(0.0deg)}12.50%{transform:translate(114.6px,26.0px) rotate(0.0deg)}13.75%{transform:translate(120.0px,26.0px) rotate(0.0deg)}15.00%{transform:translate(125.5px,26.0px) rotate(0.0deg)}16.25%{transform:translate(130.9px,26.0px) rotate(0.0deg)}17.50%{transform:translate(136.4px,26.0px) rotate(0.0deg)}18.75%{transform:translate(141.8px,26.0px) rotate(2.4deg)}20.00%{transform:translate(147.3px,26.6px) rotate(9.5deg)}21.25%{transform:translate(152.6px,27.8px) rotate(16.6deg)}22.50%{transform:translate(157.7px,29.7px) rotate(23.7deg)}23.75%{transform:translate(162.5px,32.2px) rotate(30.8deg)}25.00%{transform:translate(167.0px,35.3px) rotate(37.9deg)}26.25%{transform:translate(171.1px,38.9px) rotate(45.0deg)}27.50%{transform:translate(174.7px,43.0px) rotate(52.1deg)}28.75%{transform:translate(177.8px,47.5px) rotate(59.2deg)}30.00%{transform:translate(180.3px,52.3px) rotate(66.3deg)}31.25%{transform:translate(182.2px,57.5px) rotate(73.4deg)}32.50%{transform:translate(183.4px,62.8px) rotate(80.5deg)}33.75%{transform:translate(184.0px,68.2px) rotate(87.6deg)}35.00%{transform:translate(183.8px,73.6px) rotate(94.7deg)}36.25%{transform:translate(183.1px,79.0px) rotate(101.9deg)}37.50%{transform:translate(181.6px,84.3px) rotate(109.0deg)}38.75%{transform:translate(179.5px,89.3px) rotate(116.1deg)}40.00%{transform:translate(176.8px,94.1px) rotate(123.2deg)}41.25%{transform:translate(173.6px,98.4px) rotate(130.3deg)}42.50%{transform:translate(169.8px,102.4px) rotate(137.4deg)}43.75%{transform:translate(165.6px,105.8px) rotate(144.5deg)}45.00%{transform:translate(160.9px,108.7px) rotate(151.6deg)}46.25%{transform:translate(156.0px,111.0px) rotate(158.7deg)}47.50%{transform:translate(150.8px,112.7px) rotate(165.8deg)}48.75%{transform:translate(145.4px,113.7px) rotate(172.9deg)}50.00%{transform:translate(140.0px,114.0px) rotate(180.0deg)}51.25%{transform:translate(134.5px,114.0px) rotate(180.0deg)}52.50%{transform:translate(129.1px,114.0px) rotate(180.0deg)}53.75%{transform:translate(123.6px,114.0px) rotate(180.0deg)}55.00%{transform:translate(118.2px,114.0px) rotate(180.0deg)}56.25%{transform:translate(112.7px,114.0px) rotate(180.0deg)}57.50%{transform:translate(107.3px,114.0px) rotate(180.0deg)}58.75%{transform:translate(101.8px,114.0px) rotate(180.0deg)}60.00%{transform:translate(96.4px,114.0px) rotate(180.0deg)}61.25%{transform:translate(90.9px,114.0px) rotate(180.0deg)}62.50%{transform:translate(85.4px,114.0px) rotate(180.0deg)}63.75%{transform:translate(80.0px,114.0px) rotate(180.0deg)}65.00%{transform:translate(74.5px,114.0px) rotate(180.0deg)}66.25%{transform:translate(69.1px,114.0px) rotate(180.0deg)}67.50%{transform:translate(63.6px,114.0px) rotate(180.0deg)}68.75%{transform:translate(58.2px,114.0px) rotate(182.4deg)}70.00%{transform:translate(52.7px,113.4px) rotate(189.5deg)}71.25%{transform:translate(47.4px,112.2px) rotate(196.6deg)}72.50%{transform:translate(42.3px,110.3px) rotate(203.7deg)}73.75%{transform:translate(37.5px,107.8px) rotate(210.8deg)}75.00%{transform:translate(33.0px,104.7px) rotate(217.9deg)}76.25%{transform:translate(28.9px,101.1px) rotate(225.0deg)}77.50%{transform:translate(25.3px,97.0px) rotate(232.1deg)}78.75%{transform:translate(22.2px,92.5px) rotate(239.2deg)}80.00%{transform:translate(19.7px,87.7px) rotate(246.3deg)}81.25%{transform:translate(17.8px,82.5px) rotate(253.4deg)}82.50%{transform:translate(16.6px,77.2px) rotate(260.5deg)}83.75%{transform:translate(16.0px,71.8px) rotate(267.6deg)}85.00%{transform:translate(16.2px,66.4px) rotate(274.7deg)}86.25%{transform:translate(16.9px,61.0px) rotate(281.9deg)}87.50%{transform:translate(18.4px,55.7px) rotate(289.0deg)}88.75%{transform:translate(20.5px,50.7px) rotate(296.1deg)}90.00%{transform:translate(23.2px,45.9px) rotate(303.2deg)}91.25%{transform:translate(26.4px,41.6px) rotate(310.3deg)}92.50%{transform:translate(30.2px,37.6px) rotate(317.4deg)}93.75%{transform:translate(34.4px,34.2px) rotate(324.5deg)}95.00%{transform:translate(39.1px,31.3px) rotate(331.6deg)}96.25%{transform:translate(44.0px,29.0px) rotate(338.7deg)}97.50%{transform:translate(49.2px,27.3px) rotate(345.8deg)}98.75%{transform:translate(54.6px,26.3px) rotate(352.9deg)}100.00%{transform:translate(60.0px,26.0px) rotate(360.0deg)}}
+.stops{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:.92rem}
+.stops li{display:flex;gap:9px;align-items:center;color:var(--muted)}
+.stops li::before{content:"";flex:none;width:11px;height:11px;border-radius:50%;border:2.5px solid #f26722;background:var(--surface)}
+.stops li.on{color:var(--ink);font-weight:600}
+.stops li.on::before{background:#f26722}
+.loadcap{font-size:.8rem;color:var(--muted);margin-top:8px}
+.cone{transform-box:fill-box;animation:drop .7s cubic-bezier(.3,1.5,.6,1) both}
+@keyframes drop{from{transform:translateY(-36px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.cone{animation:none}}
+@media (max-width:520px){.loader{grid-template-columns:120px minmax(0,1fr)}.loadart>svg{width:120px}}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:600 .85rem var(--f-body);background:var(--surface);color:var(--muted);border:0;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink)}
+.tlf{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 16px;font:500 .78rem/1.5 var(--f-mono);color:var(--ink)}
+.tlf + .tlf{margin-top:16px}
+.tlf-top{display:flex;justify-content:space-between;gap:12px;color:var(--muted)}
+.tlf-title{text-align:center;margin:10px 0 12px}
+.tlf-title div:first-child{font-weight:700}
+.tlf-scroll{overflow-x:auto}
+.tlf table{width:100%;border-collapse:collapse}
+.tlf th{text-align:left;font-weight:700;border-top:1.5px solid var(--ink);border-bottom:1px solid var(--ink);padding:4px 16px 4px 0;white-space:nowrap}
+.tlf td{padding:4px 16px 4px 0;vertical-align:top}
+.tlf th:last-child,.tlf td:last-child{padding-right:0}
+.tlf td.nw{white-space:nowrap}
+.tlf tr.grp td{font-weight:700;padding:14px 0 3px;border-bottom:1px dashed var(--line)}
+.tlf tbody tr.grp:first-child td{padding-top:8px}
+.tlf tr.grp + tr td{padding-top:6px}
+.tlf tbody tr:last-child td{border-bottom:1.5px solid var(--ink)}
+.tlf tbody tr.first:not(:first-child) td{border-top:1px dashed var(--line);padding-top:10px}
+.tlf td:first-child{font-weight:700}
+.tlf svg.fig{width:100%;min-width:420px;height:auto;display:block;font-family:var(--f-mono)}
+.fig .fg-band{fill:var(--accent-soft)}
+.fig .fg-zebra{fill:var(--bg);opacity:.6}
+.fig .fg-grid{stroke:var(--line);stroke-width:1}
+.fig .fg-axis{stroke:var(--ink);stroke-width:1.5}
+.fig .fg-tick{fill:var(--muted);font-size:11px}
+.fig .fg-lab{font-size:12px;font-weight:700}
+.fig text.fg-lab:not([fill]){fill:var(--ink)}
+.fig .fg-wait{stroke-width:1.5;stroke-dasharray:3 4;opacity:.7}
+.fig .fg-dot{fill:var(--surface);stroke-width:2.5}
+.tlf .foot{margin-top:10px;color:var(--muted);display:grid;gap:2px}
+@media print{
+  body{background:#fff;color:#000}
+  .band,.composer,section:not(#planSec),footer,.planhead .row,.summary,.alsobox,.alts,.remove,.more,.sum,.tag-example{display:none!important}
+  .planhead,.loader,.tlf-top span:last-child{display:none!important}
+  .wrap{margin:0;padding:0}
+  .tlf{border:0;padding:0;break-inside:auto}
+  .tlf + .tlf{break-before:page}
+}
+@page{margin:16mm 14mm;@top-right{content:"Page " counter(page) " of " counter(pages);font:9pt 'JetBrains Mono',monospace;color:#555}}
+.rain{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.rain svg{width:120px;height:auto}
+.rain h3{margin:0 0 4px;font-size:1.1rem}
+.rain p{margin:0;color:var(--muted)}
+.rain .cloud{fill:var(--muted);opacity:.55}
+.rain .drops line{stroke:var(--loch);stroke-width:2.5;stroke-linecap:round;animation:fall 1.1s linear infinite}
+.rain .drops line:nth-child(2){animation-delay:.35s}.rain .drops line:nth-child(3){animation-delay:.7s}
+.rain .drops line:nth-child(4){animation-delay:.2s}.rain .drops line:nth-child(5){animation-delay:.55s}.rain .drops line:nth-child(6){animation-delay:.9s}
+@keyframes fall{0%{transform:translateY(-8px);opacity:0}30%{opacity:1}100%{transform:translateY(12px);opacity:0}}
+.sess.lowered{animation:lower .9s .45s ease-out both}
+@keyframes lower{from{transform:translateY(-28px);opacity:.25}to{transform:none;opacity:1}}
+.crane{position:absolute;right:8px;top:-60px;width:92px;height:auto;z-index:6;pointer-events:none;animation:craneFade 2.2s ease both}
+.crane .cr-mast,.crane .cr-jib,.crane .cr-weight,.crane .cr-cab,.crane .cr-x{fill:var(--loch)}
+.crane .cr-cable{stroke:var(--muted);stroke-width:1.5}
+.crane .cr-h{fill:var(--btn)}
+.crane .cr-hook{animation:hook 1.2s ease-in-out both;transform-origin:26px 14px}
+@keyframes hook{0%{transform:scaleY(.2)}60%{transform:scaleY(1)}100%{transform:scaleY(.25)}}
+@keyframes craneFade{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.rain .drops line,.sess.lowered,.crane,.crane .cr-hook{animation:none}.crane{display:none}}
+@media (max-width:520px){.rain{grid-template-columns:80px minmax(0,1fr)}.rain svg{width:80px}}
+.btn.brawed{display:inline-flex;align-items:center;gap:6px;border-color:#005eb8;color:var(--ink)}
+.saltire{width:20px;height:13px;border-radius:2px;transform-origin:left center;animation:wave 1s ease-in-out 2}
+@keyframes wave{0%,100%{transform:skewY(0)}25%{transform:skewY(-6deg)}75%{transform:skewY(6deg)}}
+.tracks{position:relative}
+.nessie{position:absolute;bottom:2px;width:72px;height:auto;pointer-events:none;animation:swim 4s ease-in-out both}
+.nessie .hump{fill:var(--loch)}
+.nessie .eye{fill:var(--surface)}
+.nessie .ripple{fill:none;stroke:var(--btn);stroke-width:1.5}
+@keyframes swim{0%{left:30px;opacity:0;transform:translateY(8px)}12%{opacity:1;transform:none}80%{left:calc(100% - 80px);opacity:1;transform:none}100%{left:calc(100% - 80px);opacity:0;transform:translateY(12px)}}
+.thistle{width:14px;height:17px;flex:none}
+.badge-also{display:inline-flex;align-items:center;gap:4px}
+.alsobox h3{display:flex;align-items:center;gap:6px}
+.alsobox h3 .thistle{width:18px;height:22px}
+.thistle .bloom{transform-origin:10px 10px;animation:bloom .9s .3s cubic-bezier(.3,1.5,.6,1) both}
+@keyframes bloom{from{transform:scale(.1);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.saltire,.thistle .bloom{animation:none}.nessie{display:none}}
+@media print{.nessie{display:none}}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}
+.fullpdf{margin:.4rem 0 0}
+@media print{body.print-full>*:not(#fullAgenda){display:none!important} body.print-full #fullAgenda{display:block!important} #fullAgenda .tlf{border:0;padding:0}}
+@media screen{#fullAgenda{display:none!important}}
+.fa{font-family:var(--f-body);color:#14214f;font-size:9.5pt;line-height:1.35}
+.fa-h{border-bottom:3px solid #3cc1b4;padding-bottom:6pt;margin-bottom:8pt}
+.fa-title{font-family:var(--f-display);font-weight:800;font-size:18pt;color:#1c3687}
+.fa-sub{color:#56618a;font-size:8.5pt;margin-top:2pt}
+.fa-day{font-family:var(--f-display);font-size:14pt;color:#1c3687;border-bottom:2px solid #1c3687;padding:0 0 3pt;margin:12pt 0 4pt;break-after:avoid}
+.fa-breaks .fa-day:not(:first-of-type){break-before:page}
+.fa-slot{display:block;border-top:1px solid #d8deee;padding:5pt 0 0;overflow:hidden}
+.fa-time{float:left;width:44pt;font-family:var(--f-mono);font-weight:700;color:#0f8278}
+.fa-list{margin-left:52pt}
+.fa-s{break-inside:avoid;padding:0 0 4pt}
+.fa-t{font-weight:700}
+.fa-m{color:#56618a;font-size:8.5pt}
+.fa-p{font-size:8.5pt}
+.fa-w{font-size:8.5pt;color:#0f8278;font-style:italic}
+.also-opt{font-size:.9rem;color:var(--muted);display:flex;gap:8px;align-items:center}
+.also-opt input{accent-color:var(--accent);width:16px;height:16px}
+.badge-also{color:var(--btn-ink)!important;background:var(--btn)!important;font:600 .72rem var(--f-body);letter-spacing:.03em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:1px 9px}
+.sess.also .why{border-left-color:var(--loch)}
+.why{font-size:.92rem;margin-top:5px;padding-left:10px;border-left:2px solid var(--accent)}
+.alts{margin-top:6px;font-size:.86rem}
+.alts summary{cursor:pointer;color:var(--muted)}
+.alts ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
+.alts li{display:flex;gap:8px;align-items:baseline;justify-content:space-between}
+.alts li span{min-width:0}
+.linkbtn{font:inherit;font-size:.82rem;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;white-space:nowrap}
+.remove{float:right;margin-left:8px}
+.empty{color:var(--muted);padding:12px 0}
+.agent{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:10px}
+pre.prompt{white-space:pre-wrap;font:500 .8rem/1.5 var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0;max-height:220px;overflow:auto}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:.6rem 0}
+select,input[type=search]{font:inherit;font-size:.92rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;max-width:100%}
+input[type=search]{flex:1 1 200px}
+.keybox summary{cursor:pointer;font-size:.9rem;color:var(--muted)}
+input[type=password]{font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;flex:1 1 220px;min-width:0}
+.count{font-size:.85rem;color:var(--muted)}
+.browse .slot{grid-template-columns:110px 1fr}
+footer{margin-top:3rem;font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:520px){.slot,.browse .slot{grid-template-columns:1fr;gap:2px}}
+@media (prefers-reduced-motion:no-preference){.sess{animation:in .25s ease-out both}@keyframes in{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}}
+</style>
+
+<header class="band"><div class="inner">
+    <div class="demo-flag">Beta · open-source community project</div>
+    <div class="eyebrow">EU Connect 2026 · SEC Glasgow</div>
+    <h1>Plan your Connect</h1>
+    <p class="lede">Describe your role and what you want to learn. You get a clash-free schedule across all 238 presentations, workshops, panels and posters, with a line on why each one fits.</p>
+    <div class="dates"><span>Sun 15/11</span><span>Mon 16/11</span><span>Tue 17/11</span><span>Wed 18/11</span></div>
+</div></header>
+<div class="wrap">
+
+  <div class="composer">
+    <label class="q" for="q">What are you interested in?</label>
+    <textarea id="q" placeholder="For example: I'm a statistical programmer, comfortable with SDTM and ADaM. I want to learn how teams are using AI and what's new in real-world evidence."></textarea>
+    <p class="tip">Best results come from saying <b>your role</b>, <b>what you already know well</b> and <b>what you want to learn</b>. Try an example:</p>
+    <div class="examples" id="chips"></div>
+    <details class="helper" id="helper">
+      <summary>Help me write it</summary>
+      <div class="helpgrid">
+        <label for="hRole">My role</label><input id="hRole" type="text" placeholder="e.g. senior statistical programmer at a CRO">
+        <label for="hKnow">I already know well</label><input id="hKnow" type="text" placeholder="e.g. SAS, SDTM and ADaM">
+        <label for="hLearn">I want to learn about</label><input id="hLearn" type="text" placeholder="e.g. R, AI agents and real-world evidence">
+      </div>
+      <button class="btn small" id="hUse" type="button">Use this</button>
+    </details>
+    <div class="row">
+      <button class="btn primary" id="goClaude" hidden>Build my programme</button>
+      <button class="btn" id="goQuick">Quick match</button>
+      <span class="hint" id="engineHint">Quick match runs in your browser using topic tags.</span>
+    </div>
+    <label class="also-opt"><input type="checkbox" id="alsoOn" checked> Add a few <b>You may also like</b> sessions from outside my usual topics</label>
+    <p class="hint fullpdf" id="fullPdfRow" hidden>Prefer to browse everything? Download the full agenda as a PDF: <button type="button" class="linkbtn" id="fullPdf">standard</button> or <button type="button" class="linkbtn" id="fullPdfTlf">TLF</button></p>
+    <details class="keybox" id="keyBox" hidden>
+      <summary>AI planning: add an API key</summary>
+      <div class="row" style="margin-top:8px">
+        <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-..." aria-label="Anthropic API key">
+        <button class="btn small" id="saveKey" type="button">Use key</button>
+        <button class="btn small" id="clearKey" type="button">Forget</button>
+      </div>
+      <p class="hint" style="margin:6px 0 0">Your key stays in this browser tab and is sent only to the AI provider's API. It is cleared when you close the tab. Each plan costs a few pence.</p>
+    </details>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <section id="planSec" aria-labelledby="planH" hidden>
+    <div class="planhead">
+      <div>
+        <div class="tag-example" id="exampleFlag">Example plan</div>
+        <h2 id="planH">Your programme</h2>
+      </div>
+      <div class="row">
+        <div class="seg" role="group" aria-label="View"><button type="button" id="vList" aria-pressed="true">List</button><button type="button" id="vTlf" aria-pressed="false">TLF view</button></div>
+        <button class="btn small" id="pdf" hidden>Download PDF</button><button class="btn small" id="pdfTlf" hidden>Download TLF</button>
+        <button class="btn small" id="share" hidden>Copy link</button>
+        <button class="btn small" id="copyPlan">Copy as text</button>
+      </div>
+    </div>
+    <div class="loader" id="loader" hidden>
+      <div class="loadart">
+        <svg id="subway" viewBox="0 0 200 140" role="img" aria-label="Glasgow Subway map with a train going round the Outer Circle">
+          <rect x="0" y="62" width="200" height="16" fill="var(--line)"/>
+          <text x="100" y="73.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--muted)" font-family="var(--f-body)">River Clyde</text>
+          <path id="loopPath" d="M60 26 H140 A44 44 0 0 1 140 114 H60 A44 44 0 0 1 60 26 Z" fill="none" stroke="#f26722" stroke-width="8"/>
+          <path d="M60 34 H140 A36 36 0 0 1 140 106 H60 A36 36 0 0 1 60 34 Z" fill="none" stroke="#2b3044" stroke-width="8"/>
+          <g fill="#fff"><circle cx="72.9" cy="34.0" r="3.2"/><circle cx="98.6" cy="34.0" r="3.2"/><circle cx="124.4" cy="34.0" r="3.2"/><circle cx="150.0" cy="35.4" r="3.2"/><circle cx="170.2" cy="50.4" r="3.2"/><circle cx="175.6" cy="75.0" r="3.2"/><circle cx="163.6" cy="97.2" r="3.2"/><circle cx="140.0" cy="106.0" r="3.2"/><circle cx="114.3" cy="106.0" r="3.2"/><circle cx="88.5" cy="106.0" r="3.2"/><circle cx="62.8" cy="106.0" r="3.2"/><circle cx="38.5" cy="98.9" r="3.2"/><circle cx="24.8" cy="77.8" r="3.2"/><circle cx="28.4" cy="52.8" r="3.2"/><circle cx="47.4" cy="36.3" r="3.2"/></g>
+        </svg>
+        <div class="trainlayer" aria-hidden="true"><div class="trainbox"><svg viewBox="-14 -6 29 12"><rect x="-13" y="-4.5" width="12" height="9" rx="2" fill="#f26722" stroke="#fff" stroke-width="1.2"/><path d="M0 -4.5 H9 C12 -4.5 14 -2 14 0 C14 2 12 4.5 9 4.5 H0 Z" fill="#f26722" stroke="#fff" stroke-width="1.2"/><path d="M9.5 -2.5 C11.5 -2 12.5 -1 12.7 0 C12.5 1 11.5 2 9.5 2.5 Z" fill="#cfe3ff"/></svg></div></div>
+        <svg id="duke" viewBox="0 0 200 175" role="img" aria-label="Duke of Wellington statue on horseback with a traffic cone on his head" hidden>
+          <g fill="var(--bronze)" stroke="var(--bronze)">
+            <rect x="30" y="150" width="150" height="7" rx="1" fill="var(--muted)" opacity=".6" stroke="none"/>
+            <rect x="38" y="157" width="134" height="15" rx="2" fill="var(--muted)" opacity=".4" stroke="none"/>
+            <path stroke="none" d="M58 80 C70 74 95 76 108 76 C116 70 126 56 134 46 L136 39 L139 45 L142 40 L143 47 C150 52 158 62 164 70 C167 74 163 79 158 78 C152 75 148 72 144 71 C140 77 136 87 131 96 C128 104 124 106 118 106 L70 106 C60 106 54 98 54 90 C54 86 55 82 58 80 Z"/>
+            <path fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M121 103 L123 126 L121 147 M111 103 L109 126 L111 147 M70 101 L66 124 L70 147 M61 99 L58 124 L58 147"/>
+            <path fill="none" stroke-width="5" stroke-linecap="round" d="M56 86 C45 92 41 110 46 128"/>
+            <path stroke="none" d="M84 80 L88 55 C89 48 105 48 106 55 L109 80 Z"/>
+            <path stroke="none" d="M86 72 C79 78 76 86 78 92 L95 84 Z"/>
+            <rect x="94" y="44" width="6" height="6" stroke="none"/>
+            <path fill="none" stroke="var(--surface)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".55" d="M104 86 L110 92 L106 112"/>
+            <path fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" d="M97 78 L110 92 L106 112"/>
+            <path stroke="none" d="M102 108 C106 107 111 108 115 113 L102 114 Z"/>
+            <path fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M102 56 L109 70 L122 66"/>
+            <circle cx="97" cy="39" r="7.5" stroke="none"/>
+            <path fill="none" stroke-width="1.5" stroke-linecap="round" d="M122 66 C135 70 148 72 158 74"/>
+          </g>
+          <g class="cone"><g transform="rotate(-8 97 32)"><path d="M97 0 L88 30 L106 30 Z" fill="#f26722"/><rect x="92" y="12" width="10" height="3.5" fill="#fff"/><rect x="90.5" y="20" width="13" height="3.5" fill="#fff"/><rect x="85" y="29" width="24" height="4" rx="1" fill="#2e7d5b"/></g></g>
+        </svg>
+      </div>
+      <div>
+        <ol class="stops" id="stops"><li>Your interests</li><li>238 sessions</li><li>No clashes</li><li>Your programme</li></ol>
+        <div class="loadcap" id="loadcap"></div>
+      </div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div id="plan"></div>
+  </section>
+
+
+
+
+
+  <footer>A personal open-source community project for PHUSE EU Connect 2026, currently in beta and independent of PHUSE’s official tools. The code and data are on GitHub. Session titles, times, rooms and speakers come from the public agenda as published on 30 October 2026; topic tags and short summaries were written from the abstracts. Hover over a title to see its summary. Always check the official agenda and app for changes. Use the link on each session to read the full abstract on the PHUSE site.</footer>
+</div>
+<div id="fullAgenda" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const TAGS = DATA.tags;
+const DAYN = {15:"Sunday",16:"Monday",17:"Tuesday",18:"Wednesday"};
+const DAYS = {15:"Sun 15 Nov",16:"Mon 16 Nov",17:"Tue 17 Nov",18:"Wed 18 Nov"};
+const LVL = {B:"Beginner",I:"Intermediate",A:"Advanced"};
+const S = DATA.s.map((r,i)=>({n:i,id:r[0],day:r[1],start:r[2],end:r[3],code:r[4],stream:r[5],room:r[6],lvl:r[7],sponsor:r[8],title:r[9],people:r[10],tags:r[11],sum:r[12]||""}));
+const mins = t => { const [h,m]=t.split(":").map(Number); return h*60+m; };
+S.forEach(s=>{ s.a=mins(s.start); s.b=Math.max(mins(s.end), s.a+15); s.poster=/Poster/.test(s.stream); s.keynote=/Keynote/.test(s.stream); });
+const EV = "https://events.phuse.global/event/EUConnect26/";
+const pageOf = s => /Hands-on/.test(s.stream) ? "hands-on-workshops" : (!s.code || s.code==="Panel") ? "interactive-sessions-panels" : "";
+const url = s => { const pg = pageOf(s); if (!pg) return EV+"agenda";
+  const frag = s.title.split(/\s+/).slice(0,4).join(" ").replace(/[:,]$/,"");
+  return EV+pg+"#:~:text="+encodeURIComponent(frag).replace(/-/g,"%2D"); };
+const el = (tag, attrs={}, ...kids) => { const e=document.createElement(tag); for (const [k,v] of Object.entries(attrs)) { if (k==="class") e.className=v; else if (k==="text") e.textContent=v; else e.setAttribute(k,v);} for (const k of kids) if (k!=null) e.append(k); return e; };
+
+/* ---------- quick matcher ---------- */
+const SYN = {
+ "R":["\\br\\b","tidyverse","rstudio","positron","cran","r package"],
+ "Python":["python","pandas","jupyter"],
+ "Shiny":["shiny","teal","dashboard app","interactive app"],
+ "Open source":["open[- ]?source","oss\\b","sas to r","sas-to-r","migrat"],
+ "GxP / compliance":["gxp","complian","audit","inspection","regulated"],
+ "Validation / QC":["validat","\\bqc\\b","quality control","double programming","verif","review"],
+ "AI / LLMs":["\\bai\\b","llm","genai","gen ai","generative","chatgpt","copilot","claude","language model","prompt"],
+ "Agentic AI":["agent","agentic","mcp","autonomous"],
+ "CDISC":["cdisc","standards?\\b","core rules","open rules"],
+ "ADaM":["adam\\b"],
+ "Data engineering":["data engineer","pipeline","api","databricks","lakehouse","sql","etl"],
+ "Automation":["automat","macro","reus"],
+ "Governance / strategy":["governance","strategy","roadmap","operating model"],
+ "SDTM":["sdtm","mapping"],
+ "Define-XML":["define","adrg","sdrg","reviewer guide"],
+ "USDM / digital protocol":["usdm","digital protocol","ddf","m11","schedule of activities","360i","esap"],
+ "Metadata":["metadata","mdr","biomedical concept","specification"],
+ "Regulatory submission":["submission","fda","ema","pmda","regulator","agency","agencies"],
+ "Package validation / risk":["package valid","riskmetric","package risk","qualif","package management"],
+ "Data visualisation":["visuali","plot","graph","figure","dashboard","chart"],
+ "Leadership / careers":["leader","\\bleading\\b","manag","career","people manag","mentor","wellbeing","soft skill","hiring","interview","burnout","psychological"],
+ "Quarto / reporting":["\\btlfs?\\b","\\btfls?\\b","\\btables?\\b","listing","\\breport","\\brtf\\b","quarto","markdown"],
+ "Safety":["safety","adverse","\\bae\\b","signal"],
+ "ARS / ARD":["\\bars\\b","\\bard\\b","analysis result","\\bcards\\b"],
+ "Data management / EDC":["edc","data management","crf"],
+ "SAS":["\\bsas\\b","proc\\b","macro"],
+ "pharmaverse / admiral":["pharmaverse","admiral","gtsummary","rtables","tern\\b","nest\\b"],
+ "RWE / RWD":["rwe","rwd","real[- ]world","registry","omop","ehr","external control","synthetic control","target trial"],
+ "Data transparency / privacy":["transparen","privacy","anonymi","redact","disclosure","synthetic data"],
+ "HTA / market access":["hta","health technology","jca","joint clinical","amnog","market access","payer","nice\\b","heor","eq-?5d","utility","utilities"],
+ "Cloud / platforms":["cloud","platform","\\bsce\\b","computing environment","aws","azure","container","docker","git\\b","ci/?cd"],
+ "Training / upskilling":["training","upskill","onboard","teach","graduate","placement"],
+ "Digital health / wearables":["wearable","imaging","digital health","sensor"],
+ "SEND / nonclinical":["\\bsend\\b","nonclinical","non-clinical","toxicolog"],
+ "Oncology":["oncolog","cancer","tumou?r","recist"],
+ "Statistics / estimands":["estimand","bayes","surviv","causal","iptw","weighting","mmrm","mixed model","simulation","statistical method","longitudinal"],
+ "RAG / retrieval":["\\brag\\b","retrieval","knowledge graph","literature"],
+ "Machine learning":["machine learning","\\bml\\b","predict","cluster"]
+};
+const SYNRE = Object.fromEntries(Object.entries(SYN).map(([k,v])=>[k,new RegExp(v.join("|"),"i")]));
+const STOP = new Set("a an and are as at be but by for from have how i in into is it its me my of on or our so that the this to want we what with you your about like learn more see interested work working also some any other others using use new".split(" "));
+const LEARN_RE=/\b(want|wanna|learn|new to|explore|curious|interested|keen|looking|hope|get into|understand|see how|find out|improve|start(ing|ed)?|upskill|moving (in)?to|switch(ing)? to|transition(ing)? to|try)\b/i;
+const KNOW_RE=/\b(know|comfortable|experienced|familiar|expert|years|already|confident|background|good at|strong|specialis|i'?m an?|i am an?|work(ing)? (in|on|with|as))\b/i;
+function parseIntent(q){
+  const parts = q.split(/[.;\n!?]+|,\s*(?=but\b)|\bbut\b|\band\b(?=\s+(?:i|want|would|am|keen|hope|looking|now|also)\b)/i).map(x=>x.trim()).filter(Boolean);
+  const learn=[], known=[], gen=[];
+  for (const c of parts){ if (LEARN_RE.test(c)) learn.push(c); else if (KNOW_RE.test(c)) known.push(c); else gen.push(c); }
+  const tagsIn = t => TAGS.map((n,i)=>SYNRE[n] && SYNRE[n].test(t) ? i : -1).filter(i=>i>=0);
+  const lT = tagsIn(learn.join(" ")), gT = tagsIn(gen.join(" ")).filter(i=>!lT.includes(i)), kT = tagsIn(known.join(" ")).filter(i=>!lT.includes(i)&&!gT.includes(i));
+  return {lT, gT, kT, active: learn.concat(gen).join(" ") || q};
+}
+function quickPlan(q){
+  const {lT,gT,kT,active} = parseIntent(q);
+  const words = (active.toLowerCase().match(/[a-z0-9+#]{3,}/g)||[]).filter(w=>!STOP.has(w));
+  const beginner = /beginner|new to|junior|starting|first time/i.test(q), advanced=/advanced|expert|deep/i.test(q);
+  const all = S.filter(s=>!s.keynote).map(s=>{
+    const hl = s.tags.filter(t=>lT.includes(t)), hg = s.tags.filter(t=>gT.includes(t)), hk = s.tags.filter(t=>kT.includes(t));
+    const tl = (s.title+" "+s.stream+" "+s.sum).toLowerCase();
+    const wh = words.filter(w=>tl.includes(w));
+    const wt = words.filter(w=>(s.title+" "+s.stream).toLowerCase().includes(w)).length;
+    let score = hl.length*4 + hg.length*3 + hk.length*1 + wt*2 + (wh.length-wt);
+    if (hk.length && s.lvl==="A") score+=2;
+    if (beginner && s.lvl==="B") score+=1; if (advanced && s.lvl==="A") score+=1;
+    return {s, score, hl, hg, hk, wh};
+  });
+  const scored = all.filter(x=>x.score>=4 && (x.hl.length||x.hg.length||x.wh.length||(x.hk.length&&x.s.lvl==="A"))).sort((x,y)=>y.score-x.score || x.s.n-y.s.n);
+  const picks=[]; let posters=0;
+  for (const x of scored){
+    if (x.s.poster){ if (posters>=4) continue; }
+    else if (picks.filter(p=>!p.s.poster).length>=16) continue;
+    else if (picks.some(p=>!p.s.poster && p.s.day===x.s.day && p.s.a<x.s.b && x.s.a<p.s.b)) continue;
+    if (x.s.poster && picks.some(p=>!p.s.poster && p.s.day===x.s.day && p.s.a<x.s.b && x.s.a<p.s.b)) continue;
+    if (x.s.poster) posters++;
+    let why;
+    if (x.hl.length) why = "Something you want to learn: "+listJoin(x.hl.slice(0,3).map(i=>TAGS[i]));
+    else if (x.hg.length) why = "Matches "+listJoin(x.hg.slice(0,3).map(i=>TAGS[i]));
+    else if (x.hk.length) why = "An advanced take on "+listJoin(x.hk.slice(0,2).map(i=>TAGS[i]))+", which you already know";
+    else why = "Mentions "+listJoin(x.wh.slice(0,3).map(w=>"“"+w+"”"));
+    picks.push({s:x.s, why});
+  }
+  if (picks.length && !picks.some(p=>p.s.day===15)){
+    const sun = all.filter(x=>x.s.day===15).sort((x,y)=>y.score-x.score || x.s.n-y.s.n)[0];
+    if (sun) picks.push({s:sun.s, why:"Sunday's hands-on workshops open the conference. This is the closest fit to what you described."});
+  }
+  const kw = S.filter(s=>s.keynote).map(s=>({s, why:"Keynote: everyone's in the main auditorium."}));
+  const extra = (picks.length && alsoOn()) ? addAlsoLike(picks, q) : [];
+  const main = picks.filter(p=>!extra.some(e=>overlap(e.s,p.s)));
+  let lead;
+  if (lT.length) lead = `Focused on what you want to learn: ${listJoin(lT.map(i=>TAGS[i]))}.` + (kT.length?` Gave less weight to what you already know (${listJoin(kT.map(i=>TAGS[i]))}), apart from advanced sessions.`:"");
+  else if (gT.length) lead = `Matched on ${listJoin(gT.map(i=>TAGS[i]))}.` + (kT.length?` Gave less weight to what you already know (${listJoin(kT.map(i=>TAGS[i]))}).`:"");
+  else lead = "Matched on the words in your description.";
+  return {summary: picks.length ? `${lead} ${main.length} sessions with no time clashes, plus the keynotes${extra.length?`, and ${extra.length} “You may also like” sessions from other streams`:""}. Hover over a title for a summary.` : "No strong matches yet. Try saying your role, what you already know well and what you want to learn, for example open source, CDISC standards, AI agents, RWE or leadership.", picks: picks.length ? main.concat(extra, kw) : [], nomatch: !picks.length};
+}
+function listJoin(a){ return a.length<2 ? (a[0]||"") : a.slice(0,-1).join(", ")+" and "+a[a.length-1]; }
+
+
+/* ---------- you may also like ---------- */
+const ALSO_WHY = {
+ "Professional Development":"A personal development session to balance the technical picks.",
+ "People Leadership & Management":"A people and leadership talk, useful whatever your role.",
+ "Leadership Through Innovation":"How teams lead change, a different angle from your technical picks.",
+ "Analytics & Statistics":"A statistics session to see the methods side of the work.",
+ "Data Standards & Governance":"A standards session to see where the industry's data model is heading.",
+ "Standards Implementation":"Practical standards work, a useful view from outside your usual topics.",
+ "Submissions & Agencies":"A look at the regulatory side, outside your usual topics.",
+ "Real-World Evidence":"Real-world evidence, a growing area worth a look.",
+ "Data Visualisation":"A visualisation session for a fresh way of looking at data.",
+ "Machine Learning, AI & Large Language Models":"A look at where AI is heading in our work.",
+ "Open Source Technologies":"An open-source session, a different toolkit from your usual one.",
+ "Data Handling & Data Engineering":"A data engineering session on what happens before analysis.",
+ "Emerging Trends & Innovation":"An emerging trend worth knowing about, outside your usual topics.",
+ "Application Development":"A look at the apps and tools side of the work.",
+ "Scripts, Macros & Automation":"Automation ideas you might borrow, outside your usual topics.",
+ "Software Demonstrations":"A live demo, outside your usual topics."
+};
+function hashStr(t){ let h=0; for (const ch of t) h=(h*31+ch.charCodeAt(0))>>>0; return h; }
+const PEOPLE=new Set(["Professional Development","People Leadership & Management","Leadership Through Innovation"]);
+const overlap=(x,y)=>x.day===y.day && !x.poster && !y.poster && !x.keynote && !y.keynote && x.a<y.b && y.a<x.b;
+function addAlsoLike(picks, q){
+  const userStreams = new Set(picks.map(p=>p.s.stream));
+  const usedTags = new Set(picks.flatMap(p=>p.s.tags));
+  const peopleHeavy = picks.filter(p=>PEOPLE.has(p.s.stream)).length >= picks.length/2;
+  const h = hashStr(q||"x"), out=[];
+  for (const [day, people] of [[16,true],[17,false],[18,true]]){
+    const wantPeople = peopleHeavy ? false : people;
+    const base = s=>s.day===day && !s.keynote && !s.poster && s.code && s.b-s.a<=60 && ALSO_WHY[s.stream] && !userStreams.has(s.stream) && s.lvl!=="A" && !out.some(o=>o.s.stream===s.stream);
+    let c = S.filter(s=>base(s) && PEOPLE.has(s.stream)===wantPeople && s.tags.filter(t=>usedTags.has(t)).length<=1);
+    if (!c.length) c = S.filter(s=>base(s) && PEOPLE.has(s.stream)===wantPeople);
+    if (!c.length) c = S.filter(base);
+    if (!c.length) continue;
+    const free = c.filter(s=>!picks.some(p=>overlap(p.s,s)));
+    const pool = free.length ? free : c;
+    const s = pool[(h + day*7) % pool.length];
+    out.push({s, why: ALSO_WHY[s.stream], also:true});
+  }
+  return out;
+}
+const alsoOn = ()=>{ const b=document.getElementById("alsoOn"); return !b || b.checked; };
+
+/* ---------- Claude matcher ---------- */
+const CATALOGUE = S.map(s=>[s.n, DAYS[s.day].slice(0,3)+" "+s.start+"-"+s.end, s.code||"-", s.stream, LVL[s.lvl]||"-", s.title, s.tags.map(i=>TAGS[i]).join(", "), s.sum].join(" | ")).join("\n");
+// The fixed part (instructions + full programme) is identical for everyone, so it can be cached.
+const PROMPT_FIXED = () => `You are helping an attendee plan their PHUSE EU Connect 2026 conference schedule (clinical data science, statistical programming, CDISC standards, open source, AI).
+
+Below is the full programme, one session per line:
+n | day time | paper code | stream | audience level | title | topic tags | short summary
+
+${CATALOGUE}
+
+Pick the 12 to 20 talks, workshops and panels that best fit the attendee described at the end, plus 2 to 4 posters. Rules:
+- Two picked sessions must not overlap in time on the same day. Poster Presentations (stream "Poster Presentations") all share one slot; pick 2 to 4 posters that fit (they do not clash with each other, but they do clash with other sessions in that slot).
+- Skip keynotes; they are added automatically.
+- Prefer relevance over filling every slot. Respect any level, role or topic preferences they state.
+- The attendee is here to learn, not just to confirm what they know. Prioritise topics they say they want to learn or are new to. Give topics they say they already know well lower priority, unless the session is advanced or adds something genuinely new.
+- "why" is one short plain-English sentence (max 22 words) tying the session to what they said. No dashes as punctuation.
+- "summary" is two sentences on the shape of the plan, written to the attendee.
+- If the description says nothing about what they want from the conference (small talk, a joke, just wanting coffee), return an empty "picks" list and a one-sentence friendly "summary" asking them to describe their role and interests.
+
+Reply with only JSON: {"summary": string, "picks": [{"n": number, "why": string}]}`;
+const promptUser = q => `Attendee's description:\n"""${q.slice(0,1500)}"""`;
+function claudePrompt(q){ return PROMPT_FIXED() + "\n\n" + promptUser(q); }
+
+/* ---------- plan state + render ---------- */
+let plan = null, isExample = true;
+const planEl = document.getElementById("plan");
+let nessieNext=false;
+function setPlan(p, example){
+  document.getElementById("planSec").hidden = false;
+  nessieNext = true;
+  plan = p; isExample = !!example;
+  document.getElementById("exampleFlag").hidden = !isExample;
+  document.getElementById("summary").textContent = p.summary;
+  renderPlan();
+}
+const GROUPS = [
+ ["AI & machine learning","#7c5cd6"],["Tools & code","#1f8fc7"],["Standards & submissions","#2f9e6a"],
+ ["Data & platforms","#c98a10"],["Stats, RWE & visuals","#d4507a"],["People & careers","#e2662a"],["Workshops & panels","#6b7a99"],["Posters","#8c9bb5"]];
+function groupOf(s){
+  const st=s.stream;
+  if (s.poster) return 7;
+  if (/Hands-on|Keynote/.test(st) || s.code==="Panel") return 6;
+  if (/Machine Learning/.test(st)) return 0;
+  if (/Open Source|Scripts|Coding|Application|Software/.test(st)) return 1;
+  if (/Standards|Submissions/.test(st)) return 2;
+  if (/Data Handling|Emerging/.test(st)) return 3;
+  if (/Real-World|Analytics|Visualisation/.test(st)) return 4;
+  if (/Professional|People|Leadership/.test(st)) return 5;
+  return 6;
+}
+function renderGlance(picks){
+  const box = el("div",{class:"glance"});
+  const head = el("div",{class:"glance-head"}, el("h3",{text:"Your week"}));
+  box.append(head);
+  // mix bar
+  const counts = GROUPS.map(()=>0); picks.filter(p=>!p.s.keynote).forEach(p=>counts[groupOf(p.s)]++);
+  const total = counts.reduce((a,b)=>a+b,0)||1;
+  const bar = el("div",{class:"mix",role:"img","aria-label":"Mix of topics in your plan"});
+  const legend = el("div",{class:"legend"});
+  counts.forEach((c,i)=>{ if(!c) return;
+    const seg = el("span",{class:"seg-"+i,title:GROUPS[i][0]+": "+c}); seg.style.flex=String(c); seg.style.background=GROUPS[i][1]; bar.append(seg);
+    const sw = el("span",{class:"sw"}); sw.style.background=GROUPS[i][1];
+    legend.append(el("span",{class:"lg"}, sw, GROUPS[i][0]+" ", el("b",{text:String(c)})));
+  });
+  // day tracks
+  const T0=8*60+30, T1=19*60, span=T1-T0;
+  const days=[15,16,17,18].filter(d=>picks.some(p=>p.s.day===d));
+  const tracks = el("div",{class:"tracks"});
+  const axis = el("div",{class:"track axis"}, el("span",{class:"tlab"}));
+  const ax = el("div",{class:"lane"});
+  for (let h=9; h<=19; h+=2){ const t=el("span",{class:"tick",text:String(h).padStart(2,"0")+":00"}); t.style.left=((h*60-T0)/span*100)+"%"; ax.append(t); }
+  axis.append(ax); tracks.append(axis);
+  for (const d of days){
+    const lane = el("div",{class:"lane"});
+    for (const p of picks.filter(p=>p.s.day===d)){
+      const s=p.s, a=Math.max(s.a,T0), b=Math.min(s.b,T1); if (b<=a) continue;
+      const blk = el("span",{class:"blk"+(p.also?" also":"")+(s.keynote?" key":""),title:s.start+"–"+s.end+"  "+(s.code?s.code+"  ":"")+s.title});
+      blk.style.left=((a-T0)/span*100)+"%"; blk.style.width="calc("+((b-a)/span*100)+"% - 2px)"; 
+      if (s.poster && picks.filter(q=>q.s.poster).indexOf(p)>0) continue;
+      lane.append(blk);
+    }
+    tracks.append(el("div",{class:"track"}, el("span",{class:"tlab",text:DAYS[d].slice(0,3)}), lane));
+  }
+  box.append(tracks);
+  if (nessieNext){
+    nessieNext=false;
+    tracks.insertAdjacentHTML("beforeend",'<svg class="nessie" viewBox="0 0 90 30" aria-hidden="true"><path d="M4 26 C8 14 16 14 20 26 Z M28 26 C32 10 42 10 46 26 Z M54 26 C57 16 63 16 66 26 Z" class="hump"/><path d="M66 26 C70 8 74 4 80 4 C85 4 87 8 84 10 C81 11 79 9 77 10 C75 14 75 20 76 26 Z" class="hump"/><circle cx="81" cy="6.5" r="1" class="eye"/><path d="M0 27 Q11 24 22 27 T44 27 T66 27 T90 27" class="ripple"/></svg>');
+    const n=tracks.querySelector(".nessie"); setTimeout(()=>{ if(n) n.remove(); }, 4200);
+  }
+  box.append(el("p",{class:"hint glance-note",text:"Each block is a session in your plan. Outlined ones are “You may also like” picks."}));
+  return box;
+}
+let view = "list", lastSwapped = null;
+const THISTLE = '<svg class="thistle" viewBox="0 0 20 24" aria-hidden="true"><path d="M10 23 V14" stroke="#3c8d5a" stroke-width="2" stroke-linecap="round"/><path d="M10 18 C6 17 4 15 3 13 M10 18 C14 17 16 15 17 13" stroke="#3c8d5a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M5 14 C5 10 15 10 15 14 C15 16 5 16 5 14 Z" fill="#3c8d5a"/><g class="bloom"><path d="M6 10 L5 3 M8 9 L7.5 1.5 M10 9 L10 1 M12 9 L12.5 1.5 M14 10 L15 3" stroke="#8a4fb0" stroke-width="2" stroke-linecap="round"/></g></svg>';
+const CRANE = '<svg class="crane" viewBox="0 0 120 96" aria-hidden="true"><rect x="78" y="10" width="7" height="84" class="cr-mast"/><path d="M78 30 L84 30 L84 36 L78 36 Z M78 50 L84 50 L84 56 L78 56 Z M78 70 L84 70 L84 76 L78 76 Z" class="cr-x"/><rect x="18" y="8" width="96" height="6" class="cr-jib"/><rect x="100" y="14" width="12" height="8" class="cr-weight"/><rect x="74" y="4" width="15" height="8" rx="1" class="cr-cab"/><g class="cr-hook"><line x1="26" y1="14" x2="26" y2="70" class="cr-cable"/><path d="M22 70 h8 v4 a4 4 0 1 1 -8 0 Z" class="cr-h"/></g></svg>';
+function craneIn(){
+  if (lastSwapped==null) return;
+  const slot = planEl.querySelector('[data-n="'+lastSwapped+'"]'); lastSwapped=null;
+  if (!slot) return;
+  const sess = slot.querySelector(".sess"); sess.classList.add("lowered");
+  sess.insertAdjacentHTML("beforeend", CRANE);
+  try{ slot.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){}
+  setTimeout(()=>{ sess.classList.remove("lowered"); const c=sess.querySelector(".crane"); if(c) c.remove(); }, 2200);
+}
+const fmt = m => String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+function setView(v){ view=v; document.getElementById("vList").setAttribute("aria-pressed", v==="list"); document.getElementById("vTlf").setAttribute("aria-pressed", v==="tlf"); renderPlan(); }
+function renderPlan(){
+  planEl.replaceChildren();
+  const tools=document.querySelector(".planhead .row"); if (tools) tools.hidden=!!(plan&&plan.nomatch);
+  const picks = plan.picks.slice().sort((x,y)=>x.s.day-y.s.day || x.s.a-y.s.a || x.s.n-y.s.n);
+  if (!picks.length){
+    if (plan.nomatch){
+      const box = el("div",{class:"rain"});
+      box.innerHTML = '<svg viewBox="0 0 120 90" aria-hidden="true"><g class="drops"><line x1="38" y1="58" x2="35" y2="70"/><line x1="52" y1="60" x2="49" y2="72"/><line x1="66" y1="58" x2="63" y2="70"/><line x1="80" y1="60" x2="77" y2="72"/><line x1="45" y1="66" x2="42" y2="78"/><line x1="73" y1="66" x2="70" y2="78"/></g><path class="cloud" d="M30 52 C18 52 16 36 28 34 C28 22 44 18 50 26 C56 14 76 16 78 30 C92 28 96 46 86 52 Z"/></svg>';
+      box.append(el("div",{}, el("h3",{text:"Nae luck, ya wee dafty."}), el("p",{text:"Nothing matched that description. Try saying your role, what you already know well and what you want to learn, or tap one of the examples above."})));
+      planEl.append(box);
+    } else planEl.append(el("p",{class:"empty",text:"Nothing picked yet."}));
+    return;
+  }
+  const posters = picks.filter(p=>p.s.poster), main = picks.filter(p=>!p.s.poster);
+  if (view==="tlf"){ renderTLF(main, posters); return; }
+  planEl.append(renderGlance(picks));
+  const al = picks.filter(p=>p.also);
+  if (al.length){
+    const h3a = el("h3"); h3a.innerHTML = THISTLE+"<span>You may also like</span>";
+    const box = el("div",{class:"alsobox"}, h3a, el("p",{class:"hint",text:"A few sessions from other streams you might enjoy. They're already in your plan below."}));
+    const ul = el("ul");
+    for (const p of al) ul.append(el("li",{}, el("span",{class:"when",text:DAYS[p.s.day].slice(0,3)+" "+p.s.start}), el("span",{}, el("b",{text:p.s.title}), el("span",{class:"hint",text:" · "+p.s.stream}), p.s.sum ? el("span",{class:"alsosum",text:p.s.sum}) : null)));
+    box.append(ul); planEl.append(box);
+  }
+  for (const d of [15,16,17,18]){
+    const dp = main.filter(p=>p.s.day===d); if (!dp.length) continue;
+    const box = el("div",{class:"day"}, el("h3",{}, DAYN[d], el("span",{class:"d",text:d+" Nov · "+dp.length+(dp.length===1?" session":" sessions")})));
+    for (const p of dp) box.append(slotRow(p, true));
+    planEl.append(box);
+  }
+  if (posters.length){
+    const s0 = posters[0].s;
+    const box = el("div",{class:"day"}, el("h3",{}, "Poster picks", el("span",{class:"d",text:DAYS[s0.day]+" · "+s0.start+"–"+s0.end+" · "+(s0.room||"Poster hall")})));
+    posters.forEach((p,i)=>box.append(slotRow(p, true, "Visit "+fmt(s0.a+5+i*15))));
+    planEl.append(box);
+  }
+  craneIn();
+}
+function runStamp(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+fmt(d.getHours()*60+d.getMinutes()); }
+function tlfBlock(num, title, pop, head, rows, foot){
+  const t = el("div",{class:"tlf"});
+  t.append(el("div",{class:"tlf-top"}, el("span",{text:"PHUSE EU Connect 2026"}), el("span",{class:"pg",text:"Page 1 of 1"})));
+  t.append(el("div",{class:"tlf-title"}, el("div",{text:num}), el("div",{text:title}), el("div",{text:pop})));
+  const table = el("table"), thead=el("thead"), tr=el("tr");
+  for (const h of head) tr.append(el("th",{text:h})); thead.append(tr); table.append(thead);
+  const tb = el("tbody");
+  for (const r of rows){
+    const row = el("tr", r.grp?{class:"grp"}:(r.first?{class:"first"}:{}));
+    if (r.grp) row.append(el("td",{colspan:String(head.length),text:r.grp}));
+    else r.cells.forEach((c,i)=>row.append(el("td", (r.nw||[]).includes(i)?{class:"nw",text:c}:{text:c})));
+    tb.append(row);
+  }
+  table.append(tb); t.append(el("div",{class:"tlf-scroll"}, table));
+  const f = el("div",{class:"foot"}); for (const line of foot) f.append(el("div",{text:line})); t.append(f);
+  return t;
+}
+function renderTLF(main, posters){
+  const rows=[]; let d=0;
+  for (const p of main){
+    const first = p.s.day!==d; d=p.s.day;
+    rows.push({first, cells:[first ? "2026-11-"+d : "", p.s.start+"–"+p.s.end, p.s.code||(p.s.keynote?"KEY":/Hands-on/.test(p.s.stream)?"HOW":"PANEL"), p.s.title+(p.also?" [a]":""), p.s.room||""], nw:[0,1,2]});
+  }
+  const foot = ["[a] You may also like: a session from a stream outside your usual topics.","Code prefix gives the stream (e.g. ML = Machine Learning, AI & LLMs). KEY = keynote, HOW = hands-on workshop.","Times are local (GMT). Source: EU Connect 2026 public agenda as published 2026-10-30; check the official agenda for changes.","Beta, personal project. Run: "+runStamp()];
+  planEl.append(tlfBlock("Table 14.1.1","Your Conference Programme","Planned Population (N = 1)",["Date","Time","Code","Session","Room"],rows,foot));
+  if (posters.length){
+    const s0=posters[0].s, A=s0.a, B=s0.b, NS="http://www.w3.org/2000/svg";
+    const W=640, L=150, R=16, top=10, rowH=34, H=top+posters.length*rowH+40, x=m=>L+(m-A)/(B-A)*(W-L-R);
+    const svg=document.createElementNS(NS,"svg"); svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.setAttribute("class","fig"); svg.setAttribute("role","img"); svg.setAttribute("aria-label","Suggested poster visit times");
+    const mk=(tag,at,txt)=>{ const e=document.createElementNS(NS,tag); for (const k in at) e.setAttribute(k,at[k]); if (txt!=null) e.textContent=txt; svg.append(e); return e; };
+    const yAx=top+posters.length*rowH;
+    const bg=mk("g",{});
+    const into=(g,tag,at)=>{ const e=document.createElementNS(NS,tag); for (const k in at) e.setAttribute(k,at[k]); g.append(e); return e; };
+    for (let m=A; m<=B; m+=15){ mk("line",{x1:x(m),x2:x(m),y1:top-4,y2:yAx,class:"fg-grid"}); mk("text",{x:x(m),y:yAx+16,"text-anchor":"middle",class:"fg-tick"},fmt(m)); }
+    mk("line",{x1:L,x2:W-R,y1:yAx,y2:yAx,class:"fg-axis"});
+    mk("text",{x:(L+W-R)/2,y:yAx+34,"text-anchor":"middle",class:"fg-lab"},"Time (GMT)");
+    const PAL=["#1c3687","#3cc1b4","#4a78d8","#1f9e8f","#6f86c9","#7fd3c9"];
+    into(bg,"rect",{x:x(A),y:top-4,width:x(B)-x(A),height:yAx-top+4,class:"fg-band"});
+    posters.forEach((p,i)=>{
+      const y=top+i*rowH+rowH/2, v=A+5+i*15, c=PAL[i%PAL.length];
+      if (i%2) into(bg,"rect",{x:L-70,y:y-rowH/2,width:W-R-L+70,height:rowH,class:"fg-zebra"});
+      mk("text",{x:L-10,y:y+4,"text-anchor":"end",class:"fg-lab",fill:c},p.s.code+(p.also?" [a]":""));
+      mk("line",{x1:x(A),x2:x(v),y1:y,y2:y,class:"fg-wait",stroke:c});
+      mk("rect",{x:x(v),y:y-9,width:Math.max(6,x(v+15)-x(v)),height:18,rx:9,fill:c});
+      mk("circle",{cx:x(v),cy:y,r:5,class:"fg-dot",stroke:c});
+      mk("text",{x:x(v+15)+8,y:y+4,class:"fg-tick"},fmt(v)+"–"+fmt(v+15));
+    });
+    const foot = posters.map(p=>p.s.code+": "+p.s.title+(p.s.people?" ("+p.s.people.split(" · ")[0]+")":""));
+    foot.push("Bars show a suggested 15-minute visit; dashed lines show time before the visit. Beta, personal project. Run: "+runStamp());
+    const t = el("div",{class:"tlf"});
+    t.append(el("div",{class:"tlf-top"}, el("span",{text:"PHUSE EU Connect 2026"}), el("span",{class:"pg",text:"Page 1 of 1"})));
+    t.append(el("div",{class:"tlf-title"}, el("div",{text:"Figure 14.2.1"}), el("div",{text:"Recommended Posters: Suggested Visit Times"}), el("div",{text:"Poster Session, 2026-11-"+s0.day+", "+s0.start+"–"+s0.end+", "+(s0.room||"Poster hall")})));
+    t.append(el("div",{class:"tlf-scroll"}, svg));
+    const f=el("div",{class:"foot"}); for (const line of foot) f.append(el("div",{text:line})); t.append(f);
+    planEl.append(t);
+  }
+  const pgs=planEl.querySelectorAll(".tlf .pg"); pgs.forEach((p,k)=>p.textContent="Page "+(k+1)+" of "+pgs.length);
+}
+function sessCard(s, why, also){
+  const meta = el("div",{class:"meta"});
+  if (also){ const b=el("span",{class:"badge-also"}); b.innerHTML=THISTLE+"<span>You may also like</span>"; meta.append(b); }
+  if (s.code) meta.append(el("span",{class:"code",text:s.code}));
+  meta.append(el("span",{text:s.stream}));
+  if (s.room) meta.append(el("span",{text:s.room}));
+  if (s.lvl) meta.append(el("span",{text:LVL[s.lvl]}));
+  if (s.sponsor) meta.append(el("span",{text:"Sponsored by "+s.sponsor}));
+  const tw = el("div",{class:"tw"}, el("span",{class:"title",tabindex:"0",text:s.title}));
+  if (s.sum) tw.append(el("div",{class:"sum",role:"note",text:s.sum}));
+  const c = el("div",{class:"sess"+(also?" also":"")}, meta, tw);
+  if (s.people) c.append(el("div",{class:"people",text:s.people}));
+  if (!s.keynote) c.append(el("a",{class:"more",href:url(s),target:"_blank",rel:"noopener",title:pageOf(s)?"Opens the PHUSE "+(/Hands/.test(s.stream)?"workshops":"interactive sessions and panels")+" page with the full description":"The PHUSE agenda opens at the top. Search there for "+(s.code||s.title.slice(0,30)),text:pageOf(s)?"Read more on PHUSE "+(/Hands/.test(s.stream)?"workshops":"interactive sessions")+" page ↗":"Find on PHUSE agenda"+(s.code?" (search "+s.code+")":"")+" ↗"}));
+  if (why) c.append(el("div",{class:"why",text:why}));
+  return c;
+}
+function slotRow(p, inPlan, label){
+  const s=p.s, card = sessCard(s, p.why, p.also);
+  if (inPlan && !s.keynote){
+    const rm = el("button",{class:"linkbtn remove",type:"button",text:"Remove"});
+    rm.onclick = ()=>{ plan.picks = plan.picks.filter(x=>x!==p); renderPlan(); };
+    card.querySelector(".meta").append(rm);
+    const alts = S.filter(o=>o!==s && !o.keynote && o.day===s.day && (s.poster ? o.poster : (!o.poster && o.a<s.b && s.a<o.b)) && !plan.picks.some(x=>x.s===o));
+    if (alts.length){
+      const ul = el("ul");
+      for (const o of alts.slice(0,s.poster?40:12)){
+        const sw = el("button",{class:"linkbtn",type:"button",text: s.poster ? "Add" : "Swap in"});
+        sw.onclick = ()=>{
+          lastSwapped = o.n;
+          if (s.poster) plan.picks.push({s:o, why:"Added by you."});
+          else { plan.picks = plan.picks.filter(x=>!( !x.s.poster && x.s.day===o.day && x.s.a<o.b && o.a<x.s.b)); plan.picks.push({s:o, why:"Swapped in by you."}); }
+          renderPlan();
+        };
+        ul.append(el("li",{}, el("span",{}, (o.code? o.code+" · ":"")+o.title+(o.room?" ("+o.room+")":"")), sw));
+      }
+      card.append(el("details",{class:"alts"}, el("summary",{text:(s.poster? alts.length+" more posters in this session" : "Also on at this time: "+alts.length)}), ul));
+    }
+  }
+  return el("div",{class:"slot","data-n":String(s.n)}, el("div",{class:"time",text: label || (s.start+(s.end!==s.start?"–"+s.end:""))}), card);
+}
+
+/* ---------- composer ---------- */
+const q = document.getElementById("q"), status = document.getElementById("status");
+const EXAMPLE_PLANS = /*__EXAMPLE_PLANS__*/null;  // ready-made AI plans for the unedited examples (no AI call needed)
+function storedPlan(text){
+  const ex = EXAMPLES.find(e=>e[1]===text); const p = ex && EXAMPLE_PLANS && EXAMPLE_PLANS[ex[0]];
+  if (!p) return null;
+  return {summary:p.summary, picks:p.picks.map(([k,why])=>{ const s=byKey(k); return s ? {n:s.n, why} : null; }).filter(Boolean)};
+}
+const EXAMPLES = [
+ ["Exploring open source","I'm a senior SAS programmer, comfortable with SDTM and ADaM. I want to learn how teams use open-source tools like R and Python in GxP work, and I'm new to both."],
+ ["Sharpen my toolkit","I work mostly in SAS on ADaM and TLFs. I want to pick up new SAS techniques and macro tricks to make my programs faster, reusable and easier to validate."],
+ ["Pipelines and automation","I build clinical data pipelines in Python. I want to see how others automate SDTM, define.xml and reporting, and what's new in data engineering."],
+ ["Curious about AI","I'm a statistical programmer at a CRO with a few years' experience. I want to see how AI agents are really being used for SDTM, ADaM and TLFs, beyond the hype."],
+ ["Standards specialist","I work in CDISC standards and know SDTM and define.xml well. I want to learn about USDM, digital protocols and ARS/ARD."],
+ ["Statistics-minded","I'm a statistician working closely with programmers. I want to learn more about estimands, causal inference, simulation and new statistical methods in trials."],
+ ["Real-world evidence and HTA","I support HTA and market access submissions. I want to learn about real-world evidence, registries, OMOP and estimands outside randomised trials."],
+ ["Visualisation and apps","I produce TLFs every day. I want to learn how teams build interactive visualisations, dashboards and apps for exploring trial data."],
+ ["Submissions and regulators","I prepare submission packages. I want to learn what regulators expect next, from define.xml and reviewer guides to Dataset-JSON and disclosure."],
+ ["New people manager","I've just started managing a small programming team. I want to get better at leading people and also keep up with open source and AI."]
+];
+const chips = document.getElementById("chips");
+for (const [label,text] of EXAMPLES){ const b=el("button",{class:"chip",type:"button",title:text,text:label}); b.onclick=()=>{ q.value=text; q.focus(); status.textContent="Example added. Edit it to fit you, then build your plan."; }; chips.append(b); }
+document.getElementById("hUse").onclick=()=>{
+  const r=document.getElementById("hRole").value.trim(), k=document.getElementById("hKnow").value.trim(), l=document.getElementById("hLearn").value.trim();
+  if(!r&&!k&&!l){ status.textContent="Fill in at least one box."; return; }
+  q.value=[r&&("I'm a "+r.replace(/^(i'?m |i am )?(an? )?/i,"")+"."), k&&("I already know "+k+" well."), l&&("I want to learn about "+l+".")].filter(Boolean).join(" ");
+  document.getElementById("helper").open=false; q.focus(); status.textContent="Description written. Adjust it if you like, then build your plan.";
+};
+const loader=document.getElementById("loader"), stopsEl=[...document.querySelectorAll("#stops li")], loadcap=document.getElementById("loadcap");
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+let stageTimer=null, hideTimer=null;
+function startLoader(fast){
+  document.getElementById("planSec").hidden = false;
+  document.getElementById("planSec").classList.add("building");
+  clearInterval(stageTimer); clearTimeout(hideTimer);
+  loader.hidden=false; document.getElementById("subway").removeAttribute("hidden"); document.getElementById("duke").setAttribute("hidden","");
+  stopsEl.forEach((x,i)=>x.classList.toggle("on", i===0));
+  loadcap.textContent="The Outer Circle, Glasgow Subway. Next stop: your programme.";
+  let i=0; stageTimer=setInterval(()=>{ if (i < (fast?3:2)){ i++; stopsEl[i].classList.add("on"); } }, fast?450:2500);
+}
+function finishLoader(){
+  document.getElementById("planSec").classList.remove("building");
+  clearInterval(stageTimer); stopsEl.forEach(x=>x.classList.add("on"));
+  document.getElementById("subway").setAttribute("hidden","");
+  const duke=document.getElementById("duke"), cone=duke.querySelector(".cone");
+  duke.removeAttribute("hidden"); cone.style.animation="none"; void cone.getBoundingClientRect(); cone.style.animation="";
+  loadcap.textContent="Plan ready. The Duke approves.";
+  hideTimer=setTimeout(()=>{ loader.hidden=true; }, 9000);
+}
+function stopLoader(){ clearInterval(stageTimer); loader.hidden=true; document.getElementById("planSec").classList.remove("building"); }
+let quickBusy=false;
+document.getElementById("goQuick").onclick = async ()=>{
+  const t=q.value.trim(); if(!t){ status.textContent="Describe your interests first, or tap one of the suggestions."; q.focus(); return; }
+  if (quickBusy) return; quickBusy=true; status.textContent="";
+  startLoader(true); document.getElementById("planSec").scrollIntoView({behavior:"smooth",block:"start"}); await wait(1900);
+  const res = quickPlan(t);
+  if (res.nomatch){ stopLoader(); setPlan(res, false); status.textContent=""; }
+  else { setPlan(res, false); finishLoader(); status.textContent="Done. Your plan is below."; }
+  quickBusy=false;
+};
+const PROXY_URL = ""; // Cloudflare Worker URL; empty = ask for an API key instead
+let sample=null, busy=false, apiKey="";
+const btnAI=document.getElementById("goClaude"), hint=document.getElementById("engineHint"), keyBox=document.getElementById("keyBox"), keyIn=document.getElementById("apiKey");
+try{ apiKey = sessionStorage.getItem("ec26key")||""; }catch(e){}
+function aiReady(){ return !!sample || !!PROXY_URL || !!apiKey; }
+function refreshAI(){
+  if (sample){ btnAI.hidden=false; keyBox.hidden=true; hint.textContent="Build my programme reads every title and topic and explains each pick."; return; }
+  if (window.claude && window.claude.use){ btnAI.hidden=true; keyBox.hidden=true; return; }
+  if (!PROXY_URL){ btnAI.hidden=true; keyBox.hidden=true; hint.textContent="Quick match runs in your browser using topic tags."; return; }
+  btnAI.hidden=false; keyBox.hidden=true; hint.textContent="Build my programme uses AI to read every session and explain each pick. It takes about 30 seconds."; return;
+  if (PROXY_URL){ document.getElementById("saveKey").textContent="Use passcode"; keyBox.querySelector("summary").textContent="AI planning: enter the passcode"; keyIn.placeholder="Passcode"; keyIn.setAttribute("aria-label","Passcode"); keyBox.querySelector("p").textContent="Ask the organiser for the passcode. It is kept in this tab only and cleared when you close it."; }
+  hint.textContent = apiKey ? "AI planning is on. Build my programme reads every session and explains each pick." : "Build my programme uses AI and needs the passcode. Quick match works for everyone.";
+}
+(async()=>{ try{ sample = await window.claude?.use?.("sample"); }catch(e){ sample=null; } refreshAI(); })();
+refreshAI();
+document.getElementById("saveKey").onclick=()=>{ apiKey=keyIn.value.trim(); keyIn.value=""; try{ sessionStorage.setItem("ec26key",apiKey); }catch(e){} keyBox.open=false; refreshAI(); status.textContent = apiKey ? (PROXY_URL?"Passcode set.":"Key set for this tab.") : ""; };
+document.getElementById("clearKey").onclick=()=>{ apiKey=""; keyIn.value=""; try{ sessionStorage.removeItem("ec26key"); }catch(e){} refreshAI(); status.textContent=PROXY_URL?"Passcode removed.":"Key removed."; };
+async function askAPI(q){
+  const prompt = {fixed: PROMPT_FIXED(), prompt: promptUser(q)};
+  if (PROXY_URL){
+    const r = await fetch(PROXY_URL,{method:"POST",headers:{"content-type":"application/json","x-passcode":apiKey},body:JSON.stringify(prompt)});
+    if (!r.ok){ const err=new Error("http"); err.code = r.status===401?"bad_pass":r.status===429?"rate_limited":"upstream_error"; throw err; }
+    const text=(await r.json()).text||""; const m=text.match(/\{[\s\S]*\}/); if(!m){ const err=new Error("json"); err.code="invalid_json"; throw err; }
+    return JSON.parse(m[0]);
+  }
+  const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:4000,messages:[{role:"user",content:prompt.fixed+"\n\n"+prompt.prompt}]})});
+  if (!r.ok){ const err=new Error("http"); err.code = r.status===401?"bad_key":r.status===429?"rate_limited":"upstream_error"; throw err; }
+  const j = await r.json(); const text=(j.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+  const m = text.match(/\{[\s\S]*\}/); if(!m){ const err=new Error("json"); err.code="invalid_json"; throw err; }
+  return JSON.parse(m[0]);
+}
+btnAI.onclick = async ()=>{
+  const t=q.value.trim(); if(!t){ status.textContent="Describe your interests first, or tap one of the suggestions."; q.focus(); return; }
+  if (busy) return;
+  if (!aiReady()){ keyBox.open=true; keyIn.focus(); status.textContent= PROXY_URL ? "Enter the passcode to use AI planning, or use Quick match." : "Paste an API key to use AI planning, or use Quick match."; return; }
+  const prompt = sample ? claudePrompt(t) : t;
+  const stored = storedPlan(t);
+  busy=true; btnAI.disabled=true; status.textContent= stored ? "" : "Reading all 238 sessions. This can take up to a minute."; startLoader(!!stored); document.getElementById("planSec").scrollIntoView({block:"start"});
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  try{
+    const res = stored ? (await wait(1900), stored) : sample ? await sample.json(prompt) : await askAPI(prompt);
+    const seen=new Set(), picks=[];
+    for (const p of (res && Array.isArray(res.picks) ? res.picks : [])){
+      const s=S[Number(p.n)]; if(!s||s.keynote||seen.has(s.n)) continue;
+      if (!s.poster && picks.some(x=>!x.s.poster && x.s.day===s.day && x.s.a<s.b && s.a<x.s.b)) continue;
+      seen.add(s.n); picks.push({s, why:String(p.why||"")});
+    }
+    if (picks.length){
+      const qp = quickPlan(t).picks;
+      if (!picks.some(x=>x.s.poster)){
+        let k=0; for (const x of qp) if (x.s.poster && k<3 && !picks.some(y=>!y.s.poster && y.s.day===x.s.day && y.s.a<x.s.b && x.s.a<y.s.b)){ picks.push({s:x.s, why:"A poster close to your interests: "+x.why.replace(/^[^:]*:\s*/,"")}); k++; }
+      }
+      if (!picks.some(x=>x.s.day===15)){ const w=qp.find(x=>x.s.day===15); if (w) picks.push({s:w.s, why:w.why}); }
+    }
+    if (picks.length && alsoOn()){ const ex=addAlsoLike(picks, t); for (const e of ex){ for (let i=picks.length-1;i>=0;i--) if (overlap(picks[i].s,e.s)) picks.splice(i,1); picks.push(e); } }
+    if (!picks.length){ stopLoader(); setPlan({summary:String(res?.summary||"No strong matches yet. Try saying your role, what you already know well and what you want to learn."), picks:[], nomatch:true}, false); status.textContent=""; return; }
+    for (const s of S.filter(s=>s.keynote)) picks.push({s, why:"Keynote: everyone's in the main auditorium."});
+    setPlan({summary:String(res?.summary||"Here is your plan."), picks}, false);
+    finishLoader(); status.textContent="Done. Your plan is below.";
+  }catch(e){
+    stopLoader();
+    const code=e&&e.code;
+    if (code==="not_granted"||code==="sampling_disabled"||code==="not_declared"||code==="capability_disabled"){ btnAI.hidden=true; status.textContent="AI planning isn't available here, so use Quick match."; }
+    else if (code==="bad_key") status.textContent="That API key was refused. Check it and set it again.";
+    else if (code==="bad_pass"){ apiKey=""; try{ sessionStorage.removeItem("ec26key"); }catch(e){} refreshAI(); keyBox.open=true; keyIn.focus(); status.textContent="That passcode isn't right. Enter it again."; }
+    else if (code==="rate_limited") status.textContent="Too many requests just now. Try again in a minute, or use Quick match.";
+    else if (code==="cancelled") status.textContent="";
+    else status.textContent="That didn't come back cleanly. Try again, or use Quick match.";
+  }finally{ busy=false; btnAI.disabled=false; }
+};
+
+/* ---------- export ---------- */
+function planText(){
+  const picks = plan.picks.slice().sort((x,y)=>x.s.day-y.s.day||x.s.a-y.s.a||x.s.n-y.s.n);
+  const posters = picks.filter(p=>p.s.poster);
+  let out="My PHUSE EU Connect 2026 plan\n", d=0, pdone=false;
+  for (const p of picks){
+    if(p.s.day!==d){ d=p.s.day; out+="\n"+DAYS[d]+"\n"; }
+    const room = p.s.room?" ("+p.s.room+")":"";
+    if (p.s.poster){
+      if (pdone) continue; pdone=true; const s0=p.s;
+      out+=`${s0.start}-${s0.end}  Poster session${room}, suggested visits:\n`;
+      posters.forEach((q,i)=>{ out+=`    ${fmt(s0.a+5+i*15)}  ${q.s.code}  ${q.s.title}${q.also?"  [You may also like]":""}\n`; });
+      continue;
+    }
+    const who = p.s.keynote && p.s.people ? p.s.people.split(" · ")[0] : "";
+    const label = p.s.keynote ? "KEYNOTE"+(who?" ("+who+")":"")+":  " : /Hands-on/.test(p.s.stream) ? "WORKSHOP:  " : (p.s.code?p.s.code+"  ":"");
+    out+=`${p.s.start}-${p.s.end}  ${label}${p.s.title}${room}${p.also?"  [You may also like]":""}\n`;
+  }
+  return out;
+}
+const SALTIRE='<svg class="saltire" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#005eb8"/><path d="M0 0 L30 20 M30 0 L0 20" stroke="#fff" stroke-width="4"/></svg>';
+function braw(btn, msg){
+  if (!btn || btn.dataset.busy) return; btn.dataset.busy="1";
+  const old=btn.innerHTML; btn.classList.add("brawed"); btn.innerHTML=SALTIRE+"<span>"+(msg||"Ken! Copied")+"</span>";
+  setTimeout(()=>{ btn.innerHTML=old; btn.classList.remove("brawed"); delete btn.dataset.busy; }, 2000);
+}
+async function copy(text, noteEl, okMsg, btn, msg){
+  try{ await navigator.clipboard.writeText(text); noteEl.textContent=okMsg; braw(btn, msg); }
+  catch(e){ const ta=el("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.append(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); noteEl.textContent = ok?okMsg:"Copy was blocked. Select the text and copy it yourself."; if (ok) braw(btn, msg); }
+}
+document.getElementById("copyPlan").onclick = e=>copy(planText(), status, "Plan copied.", e.currentTarget);
+const pad=n=>String(n).padStart(2,"0");
+function ics(){
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Connect planner//EN","CALSCALE:GREGORIAN"];
+  for (const p of plan.picks){ const s=p.s; const dt=t=>`202611${pad(s.day)}T${t.replace(":","")}00Z`;
+    lines.push("BEGIN:VEVENT","UID:"+(s.id||("k"+s.n))+"@euconnect26","DTSTAMP:20261030T000000Z","DTSTART:"+dt(s.start),"DTEND:"+dt(s.end===s.start?s.start:s.end),
+      "SUMMARY:"+esc((s.code?s.code+" ":"")+s.title),"LOCATION:"+esc((s.room?s.room+", ":"")+"SEC Glasgow"),"DESCRIPTION:"+esc((p.why||"")+"\\n"+url(s)),"END:VEVENT"); }
+  lines.push("END:VCALENDAR"); return lines.join("\r\n");
+}
+const esc=t=>String(t).replace(/[\\;,]/g,m=>"\\"+m).replace(/\n/g,"\\n");
+
+
+/* ---------- view, pdf, share ---------- */
+document.getElementById("vList").onclick=()=>setView("list");
+document.getElementById("vTlf").onclick=()=>setView("tlf");
+const standalone = !(window.claude && window.claude.use);
+const codeOf = s => s.code||(s.keynote?"KEY":/Hands-on/.test(s.stream)?"HOW":"PANEL");
+const FULL_SUB="SEC Glasgow, 15 to 18 November 2026. Times are local (GMT). From the public agenda as published 30 October 2026; check the official agenda and app for changes. Beta, personal project.";
+function agendaStandard(box, items, title, sub, breaks){
+  const fa=el("div",{class:breaks?"fa fa-breaks":"fa"});
+  fa.append(el("div",{class:"fa-h"}, el("div",{class:"fa-title",text:title}), el("div",{class:"fa-sub",text:sub})));
+  let d=0, slot=null, list=null;
+  for (const it of items){
+    const s=it.s;
+    if (s.day!==d){ d=s.day; slot=null; fa.append(el("h2",{class:"fa-day",text:DAYN[d]+" "+d+" November"})); }
+    if (slot!==s.start){ slot=s.start; list=el("div",{class:"fa-list"}); fa.append(el("div",{class:"fa-slot"}, el("div",{class:"fa-time",text:s.start}), list)); }
+    const meta=[codeOf(s), s.poster?"Poster":s.stream, s.room, s.start+"–"+s.end, it.visit?"suggested visit "+it.visit:""].filter(Boolean).join(" · ");
+    const e=el("div",{class:"fa-s"}, el("div",{class:"fa-t",text:s.title+(it.also?" (you may also like)":"")}), el("div",{class:"fa-m",text:meta}));
+    if (s.people) e.append(el("div",{class:"fa-p",text:s.people}));
+    if (it.why) e.append(el("div",{class:"fa-w",text:it.why}));
+    list.append(e);
+  }
+  box.append(fa);
+}
+function printBox(){
+  document.body.classList.add("print-full");
+  const done=()=>{ document.body.classList.remove("print-full"); window.removeEventListener("afterprint",done); };
+  window.addEventListener("afterprint",done);
+  setTimeout(()=>window.print(),50);
+}
+function planStandardPrint(){
+  if (!plan || !plan.picks.length) return;
+  const box=document.getElementById("fullAgenda"); box.replaceChildren();
+  const picks=plan.picks.slice().sort((x,y)=>x.s.day-y.s.day||x.s.a-y.s.a||x.s.n-y.s.n);
+  const posters=picks.filter(p=>p.s.poster);
+  const items=picks.map(p=>({s:p.s, why:p.why, also:p.also, visit:p.s.poster ? fmt(posters[0].s.a+5+posters.indexOf(p)*15) : ""}));
+  agendaStandard(box, items, "My EU Connect 2026 programme", (plan.summary? plan.summary.replace(/\s*Hover over a title for a summary\.?/,"")+" " : "")+"Times are local (GMT); check the official agenda and app for changes. Beta, personal project.");
+  printBox();
+}
+function fullAgendaPrint(mode){
+  const box=document.getElementById("fullAgenda"); box.replaceChildren();
+  const all=S.slice().sort((x,y)=>x.day-y.day||x.a-y.a||(x.code||"~").localeCompare(y.code||"~")||x.n-y.n);
+  if (mode==="standard") agendaStandard(box, all.map(s=>({s})), "EU Connect 2026 · Full programme", FULL_SUB, true); else {
+  const rows=[]; let d=0;
+  for (const s of all){
+    if (s.day!==d){ d=s.day; rows.push({grp:DAYN[d]+" 2026-11-"+d}); }
+    const who = s.people ? " ("+s.people.split(" · ").slice(0,2).join(", ")+")" : "";
+    rows.push({cells:[s.start+"–"+s.end, codeOf(s), s.title+who, s.room||""], nw:[0,1]});
+  }
+  const foot=["Code prefix gives the stream (e.g. OS = Open Source Technologies, PP = poster). KEY = keynote, HOW = hands-on workshop.","Times are local (GMT). Source: EU Connect 2026 public agenda as published 2026-10-30; check the official agenda and app for changes.","Beta, personal project. Run: "+runStamp()];
+  box.append(tlfBlock("Listing 16.1.1","Full Conference Programme","All Sessions (N = "+S.length+")",["Time","Code","Session","Room"],rows,foot));
+  const pg=box.querySelector(".pg"); if (pg) pg.remove();
+  }
+  printBox();
+}
+document.getElementById("fullPdf").onclick=()=>fullAgendaPrint("standard");
+document.getElementById("fullPdfTlf").onclick=()=>fullAgendaPrint("tlf");
+if (standalone) document.getElementById("fullPdfRow").hidden=false;
+if (standalone){ document.getElementById("pdf").hidden=false; document.getElementById("pdfTlf").hidden=false; document.getElementById("share").hidden=false; }
+document.getElementById("pdf").onclick=planStandardPrint;
+document.getElementById("pdfTlf").onclick=()=>{ setView("tlf"); setTimeout(()=>window.print(),150); };
+document.getElementById("share").onclick=e=>{ const btn=e.currentTarget;
+  const code = plan.picks.map(p=>(p.also?"x":"")+keyOf(p.s)).join("-");
+  copy((/^https?:$/.test(location.protocol)?location.origin+location.pathname:"https://smccawille88.github.io/euconnect26-planner/")+"#p-"+code, status, "Link copied. Anyone opening it sees this plan.", btn, "Ken! Copied");
+};
+const KEYS = S.filter(s=>s.keynote);
+function keyOf(s){ return s.id ? s.id.slice(0,6) : "k"+KEYS.indexOf(s); }
+function byKey(k){ return k.startsWith("k") ? KEYS[parseInt(k.slice(1),10)] : S.find(s=>s.id && s.id.slice(0,6)===k); }
+function sharedPlan(){
+  const h=(location.hash||"").replace(/^#/,""); if(!h.startsWith("p-")) return null;
+  const picks=[];
+  for (const t of h.slice(2).split("-")){ const also=t.startsWith("x"); const s0=byKey(also?t.slice(1):t); if(s0 && !picks.some(p=>p.s===s0)) picks.push({s:s0, why:s0.keynote?"Keynote: everyone's in the main auditorium.":"", also}); }
+  return picks.length ? {summary:"A shared programme. Build your own above, or swap sessions below.", picks} : null;
+}
+/* ---------- example at rest ---------- */
+const EX = "I\u2019m a senior SAS programmer, comfortable with SDTM and ADaM. I want to learn how teams use R and AI agents in GxP work.";
+q.value = "";
+const ex = quickPlan(EX); ex.summary = "Example for: “"+EX+"” Type your own above and press Quick match."; const shared = standalone ? sharedPlan() : null;
+if (shared) setPlan(shared, false);
+</script>
+
+</body>
+</html>
