@@ -6,6 +6,11 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 
 > A personal open-source community project, currently in beta and independent of PHUSE's official tools.
 
+## Writing your description
+
+- **Help me write it** lets you tap your role, experience and the topics you know or want to learn, and writes the description for you. It runs in your browser.
+- **Polish my description with AI** tidies rough notes into a clear description, without adding anything you didn't say. There is an Undo if you prefer your own wording.
+
 ## Two ways to build a plan
 
 - **Quick match** runs entirely in your browser. It matches your description against topic tags and short summaries of every session. It is instant and free.
@@ -17,7 +22,8 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 - Always includes the keynotes, a Sunday hands-on workshop and a few poster picks with suggested visit times
 - Adds a few "You may also like" sessions from outside your usual topics
 - Shows what else is on at the same time, so you can swap sessions
-- Offers a printable TLF-style view, a shareable link and a plain-text copy of your plan
+- Lets you download your plan as a PDF, in a standard layout or as a TLF, or copy it as a shareable link or plain text
+- Offers the full agenda as a PDF too, in standard or TLF format
 
 ## Data
 
@@ -28,7 +34,7 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 ## Privacy
 
 - **Quick match:** everything runs in your browser. Nothing you type is sent anywhere.
-- **Build my programme:** your description is sent, through a small proxy, to the AI provider's API to build the plan. It is not stored by this tool. Don't include personal or confidential details.
+- **Build my programme and Polish my description:** your description is sent, through a small proxy, to the AI provider's API to build the plan or tidy the text. It is not stored by this tool. Don't include personal or confidential details.
 - Shared plan links contain only session IDs, not your description.
 
 ## How the AI part works
