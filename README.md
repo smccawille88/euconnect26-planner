@@ -4,7 +4,12 @@
 
 A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 November 2026). Describe your role, what you already know well and what you want to learn, and it builds a clash-free plan from all 238 sessions, workshops, panels and posters.
 
-> A personal community project, currently in beta and independent of PHUSE's official tools.
+> A personal open-source community project, currently in beta and independent of PHUSE's official tools.
+
+## Writing your description
+
+- **Help me write it** lets you tap your role, experience and the topics you know or want to learn, and writes the description for you. It runs in your browser.
+- **Polish my description with AI** tidies rough notes into a clear description, without adding anything you didn't say. There is an Undo if you prefer your own wording.
 
 ## Two ways to build a plan
 
@@ -13,11 +18,14 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 
 ## What it does
 
-- Prioritises what you want to learn over what you already know
+- Prioritises what you want to learn, while keeping a few sessions on what you already know so you stay current
+- Only uses the days you say you're attending
+- Lets you mark sessions "More like this" or "Less like this" and rebuild the plan with that feedback
 - Always includes the keynotes, a Sunday hands-on workshop and a few poster picks with suggested visit times
 - Adds a few "You may also like" sessions from outside your usual topics
 - Shows what else is on at the same time, so you can swap sessions
-- Offers a printable TLF-style view, a shareable link and a plain-text copy of your plan
+- Lets you download your plan as a PDF, in a standard layout or as a TLF, or copy it as a shareable link or plain text
+- Offers the full agenda as a PDF too, in standard or TLF format
 
 ## Data
 
@@ -28,7 +36,7 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 ## Privacy
 
 - **Quick match:** everything runs in your browser. Nothing you type is sent anywhere.
-- **Build my programme:** your description is sent, through a small proxy, to the AI provider's API to build the plan. It is not stored by this tool. Don't include personal or confidential details.
+- **Build my programme and Polish my description:** your description is sent, through a small proxy, to the AI provider's API to build the plan or tidy the text. It is not stored by this tool. Don't include personal or confidential details.
 - Shared plan links contain only session IDs, not your description.
 
 ## How the AI part works
