@@ -25,6 +25,7 @@ A personal schedule builder for **PHUSE EU Connect 2026** (SEC Glasgow, 15–18 
 - Adds a few "You may also like" sessions from outside your usual topics
 - Shows what else is on at the same time, so you can swap sessions
 - Lets you download your plan as a PDF, in a standard layout or as a TLF, or copy it as a shareable link or plain text
+- In the TLF view, can also show your plan as ARD (Analysis Results Data in long format, following CDISC Analysis Results Standards), which you can copy or download as CSV
 - Offers the full agenda as a PDF too, in standard or TLF format
 
 ## Data
