@@ -215,6 +215,15 @@ section{margin-top:2.4rem}
 @keyframes bloom{from{transform:scale(.1);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.saltire,.thistle .bloom{animation:none}.nessie{display:none}}
 @media print{.nessie{display:none}}
+.helper .hsec{margin:10px 0}
+.helper .hlab{font-weight:700;font-size:.92rem;margin-bottom:6px}
+.helper .hlab .opt{font-weight:400;color:var(--muted)}
+.helper .hchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.helper .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.helper input[type=text]{width:100%;font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.hprev{margin:10px 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);font-size:.95rem}
+.hprev.empty{background:none;border:1px dashed var(--line);color:var(--muted)}
+.polishrow{margin:6px 0 0}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}
 .fullpdf{margin:.4rem 0 0}
 @media print{body.print-full>*:not(#fullAgenda){display:none!important} body.print-full #fullAgenda{display:block!important} #fullAgenda .tlf{border:0;padding:0}}
@@ -274,13 +283,15 @@ footer{margin-top:3rem;font-size:.82rem;color:var(--muted);border-top:1px solid 
     <textarea id="q" placeholder="For example: I'm a statistical programmer, comfortable with SDTM and ADaM. I want to learn how teams are using AI and what's new in real-world evidence."></textarea>
     <p class="tip">Best results come from saying <b>your role</b>, <b>what you already know well</b> and <b>what you want to learn</b>. Try an example:</p>
     <div class="examples" id="chips"></div>
+    <p class="hint polishrow" id="polishRow" hidden><button type="button" class="linkbtn" id="polish">Polish my description with AI</button> <button type="button" class="linkbtn" id="unpolish" hidden>Undo</button></p>
     <details class="helper" id="helper">
       <summary>Help me write it</summary>
-      <div class="helpgrid">
-        <label for="hRole">My role</label><input id="hRole" type="text" placeholder="e.g. senior statistical programmer at a CRO">
-        <label for="hKnow">I already know well</label><input id="hKnow" type="text" placeholder="e.g. SAS, SDTM and ADaM">
-        <label for="hLearn">I want to learn about</label><input id="hLearn" type="text" placeholder="e.g. R, AI agents and real-world evidence">
-      </div>
+      <div class="hsec"><div class="hlab">My role</div><div class="hchips" id="hRoles"></div><input id="hRole" type="text" placeholder="Or type your own, e.g. senior programmer at a CRO"></div>
+      <div class="hsec"><div class="hlab">Experience</div><div class="hchips" id="hLevels"></div></div>
+      <div class="hsec"><div class="hlab">I already know well</div><div class="hchips" id="hKnowC"></div></div>
+      <div class="hsec"><div class="hlab">I want to learn about</div><div class="hchips" id="hLearnC"></div></div>
+      <div class="hsec"><div class="hlab">Anything else? <span class="opt">(optional)</span></div><input id="hExtra" type="text" placeholder="e.g. I prefer hands-on sessions and practical case studies"></div>
+      <div class="hprev" id="hPrev">Pick a few options and your description appears here.</div>
       <button class="btn small" id="hUse" type="button">Use this</button>
     </details>
     <div class="row">
@@ -785,11 +796,40 @@ const EXAMPLES = [
 ];
 const chips = document.getElementById("chips");
 for (const [label,text] of EXAMPLES){ const b=el("button",{class:"chip",type:"button",title:text,text:label}); b.onclick=()=>{ q.value=text; q.focus(); status.textContent="Example added. Edit it to fit you, then build your plan."; }; chips.append(b); }
+const H_ROLES=["Statistical programmer","Statistician","Data manager","Standards specialist","Data scientist or engineer","Team lead or manager","New to the industry"];
+const H_LEVELS=[["New to this",", fairly new to the field","I'm fairly new to the field."],["A few years in"," with a few years' experience","I have a few years' experience."],["Very experienced"," with many years' experience, happy with advanced sessions","I have many years' experience and I'm happy with advanced sessions."]];
+const H_TOPICS=["SDTM/ADaM","Define-XML and submissions","USDM/digital protocols","ARS/ARD","validation/QC","automation/pipelines","open source","AI/LLMs","agentic AI","data visualisation/apps","statistics/estimands","real-world evidence","HTA/market access","leadership/careers"];
+const hs={role:"",level:-1,know:new Set(),learn:new Set()};
+const hJoin=a=>a.length<2?a.join(""):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+function hText(){
+  const role=(document.getElementById("hRole").value.trim()||hs.role).replace(/^(i'?m |i am )?(an? )?/i,"");
+  const lv=hs.level>=0?H_LEVELS[hs.level]:null;
+  const extra=document.getElementById("hExtra").value.trim();
+  const out=[];
+  if (role){ const art=/^[aeiou]/i.test(role)?"an ":"a "; out.push(/^new to/i.test(role) ? "I'm new to the industry." : "I'm "+art+role.charAt(0).toLowerCase()+role.slice(1)+(lv?lv[1]:"")+"."); }
+  else if (lv) out.push(lv[2]);
+  if (hs.know.size) out.push("I'm comfortable with "+hJoin([...hs.know])+".");
+  if (hs.learn.size) out.push("I want to learn about "+hJoin([...hs.learn])+".");
+  if (extra) out.push(/[.!?]$/.test(extra)?extra:extra+".");
+  return out.join(" ");
+}
+function hRefresh(){ const tx=hText(); const p=document.getElementById("hPrev"); p.textContent=tx||"Pick a few options and your description appears here."; p.classList.toggle("empty",!tx); }
+function hChip(box,label,on,click){ const b=el("button",{class:"chip",type:"button",text:label}); b.setAttribute("aria-pressed",on?"true":"false"); b.onclick=()=>{ click(); hDraw(); }; box.append(b); }
+function hDraw(){
+  const R=document.getElementById("hRoles"),L=document.getElementById("hLevels"),K=document.getElementById("hKnowC"),N=document.getElementById("hLearnC");
+  [R,L,K,N].forEach(x=>x.replaceChildren());
+  H_ROLES.forEach(r=>hChip(R,r,hs.role===r,()=>{ hs.role = hs.role===r?"":r; document.getElementById("hRole").value=""; }));
+  H_LEVELS.forEach(([lab],i)=>hChip(L,lab,hs.level===i,()=>{ hs.level = hs.level===i?-1:i; }));
+  H_TOPICS.forEach(tp=>hChip(K,tp,hs.know.has(tp),()=>{ hs.know.has(tp)?hs.know.delete(tp):(hs.know.add(tp),hs.learn.delete(tp)); }));
+  H_TOPICS.forEach(tp=>hChip(N,tp,hs.learn.has(tp),()=>{ hs.learn.has(tp)?hs.learn.delete(tp):(hs.learn.add(tp),hs.know.delete(tp)); }));
+  hRefresh();
+}
+hDraw();
+document.getElementById("hRole").oninput=()=>{ if(document.getElementById("hRole").value.trim()){ hs.role=""; hDraw(); } else hRefresh(); };
+document.getElementById("hExtra").oninput=hRefresh;
 document.getElementById("hUse").onclick=()=>{
-  const r=document.getElementById("hRole").value.trim(), k=document.getElementById("hKnow").value.trim(), l=document.getElementById("hLearn").value.trim();
-  if(!r&&!k&&!l){ status.textContent="Fill in at least one box."; return; }
-  q.value=[r&&("I'm a "+r.replace(/^(i'?m |i am )?(an? )?/i,"")+"."), k&&("I already know "+k+" well."), l&&("I want to learn about "+l+".")].filter(Boolean).join(" ");
-  document.getElementById("helper").open=false; q.focus(); status.textContent="Description written. Adjust it if you like, then build your plan.";
+  const tx=hText(); if(!tx){ status.textContent="Pick at least one option."; return; }
+  q.value=tx; document.getElementById("helper").open=false; q.focus(); status.textContent="Description written. Adjust it if you like, then build your plan.";
 };
 const loader=document.getElementById("loader"), stopsEl=[...document.querySelectorAll("#stops li")], loadcap=document.getElementById("loadcap");
 const wait = ms => new Promise(r=>setTimeout(r,ms));
@@ -829,6 +869,7 @@ const btnAI=document.getElementById("goClaude"), hint=document.getElementById("e
 try{ apiKey = sessionStorage.getItem("ec26key")||""; }catch(e){}
 function aiReady(){ return !!sample || !!PROXY_URL || !!apiKey; }
 function refreshAI(){
+  document.getElementById("polishRow").hidden = !(sample || PROXY_URL);
   if (sample){ btnAI.hidden=false; keyBox.hidden=true; hint.textContent="Build my programme reads every title and topic and explains each pick."; return; }
   if (window.claude && window.claude.use){ btnAI.hidden=true; keyBox.hidden=true; return; }
   if (!PROXY_URL){ btnAI.hidden=true; keyBox.hidden=true; hint.textContent="Quick match runs in your browser using topic tags."; return; }
@@ -836,6 +877,36 @@ function refreshAI(){
   if (PROXY_URL){ document.getElementById("saveKey").textContent="Use passcode"; keyBox.querySelector("summary").textContent="AI planning: enter the passcode"; keyIn.placeholder="Passcode"; keyIn.setAttribute("aria-label","Passcode"); keyBox.querySelector("p").textContent="Ask the organiser for the passcode. It is kept in this tab only and cleared when you close it."; }
   hint.textContent = apiKey ? "AI planning is on. Build my programme reads every session and explains each pick." : "Build my programme uses AI and needs the passcode. Quick match works for everyone.";
 }
+async function askSmall(prompt){
+  if (sample) return await sample.json(prompt);
+  const r = await fetch(PROXY_URL,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt})});
+  if (!r.ok){ const err=new Error("http"); err.code = r.status===429?"rate_limited":"upstream_error"; throw err; }
+  const text=(await r.json()).text||""; const m=text.match(/\{[\s\S]*\}/); if(!m) throw new Error("json");
+  return JSON.parse(m[0]);
+}
+let beforePolish="";
+document.getElementById("polish").onclick=async e=>{
+  const btn=e.currentTarget, t=q.value.trim();
+  if (!t){ status.textContent="Write a rough description first, even a few words, then polish it."; q.focus(); return; }
+  if (btn.disabled) return;
+  btn.disabled=true; const lab=btn.textContent; btn.textContent="Polishing...";
+  try{
+    const res = await askSmall(`You help attendees of PHUSE EU Connect 2026 (a clinical data science and statistical programming conference) describe themselves so a session planner can match them well.
+Rewrite the description below as 2 or 3 short first-person sentences that state, where given: their role, how experienced they are, what they already know well, and what they want to learn. Use "I'm comfortable with ..." for what they know and "I want to learn about ..." for what they want to learn.
+Keep their meaning, fix typos and expand obvious abbreviations. Do not invent experience, topics or preferences they did not mention. No dashes as punctuation. If the text has nothing to do with the conference, return it unchanged.
+Reply with only JSON: {"text": string}
+
+Description:
+"""${t.slice(0,1000)}"""`);
+    const out=String(res&&res.text||"").trim();
+    if (!out) throw new Error("empty");
+    beforePolish=t; q.value=out; document.getElementById("unpolish").hidden=false;
+    status.textContent="Polished. Check it still sounds like you, then build your plan.";
+  }catch(err){ status.textContent = err.code==="rate_limited" ? "Too many requests just now. Try again in a little while." : "Couldn't polish that just now. Your text is unchanged."; }
+  finally{ btn.disabled=false; btn.textContent=lab; }
+};
+document.getElementById("unpolish").onclick=()=>{ if(beforePolish){ q.value=beforePolish; beforePolish=""; } document.getElementById("unpolish").hidden=true; status.textContent="Back to your original wording."; };
+q.addEventListener("input",()=>{ document.getElementById("unpolish").hidden=true; });
 (async()=>{ try{ sample = await window.claude?.use?.("sample"); }catch(e){ sample=null; } refreshAI(); })();
 refreshAI();
 document.getElementById("saveKey").onclick=()=>{ apiKey=keyIn.value.trim(); keyIn.value=""; try{ sessionStorage.setItem("ec26key",apiKey); }catch(e){} keyBox.open=false; refreshAI(); status.textContent = apiKey ? (PROXY_URL?"Passcode set.":"Key set for this tab.") : ""; };
