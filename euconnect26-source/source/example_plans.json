@@ -1,0 +1,844 @@
+{
+ "Exploring open source": {
+  "summary": "A gentle route from SAS into R and Python, starting with how GxP teams govern and validate open source, then real migration stories from several sponsors. You finish with hands-on packages, Shiny and Python tooling you can try back at work.",
+  "picks": [
+   [
+    "f4716b",
+    "A practical start on how QC changes when open-source tools enter regulated work."
+   ],
+   [
+    "b16553",
+    "Shows how R and Python package versions are pinned, approved and audited in GxP."
+   ],
+   [
+    "ca5264",
+    "AstraZeneca's step by step process for bringing R into GxP reporting."
+   ],
+   [
+    "8d5de9",
+    "A validated R framework already used for client submissions, a good picture of what ready looks like."
+   ],
+   [
+    "846c00",
+    "Roche harmonising SDTM at scale in R, using the data standards you already know."
+   ],
+   [
+    "0457be",
+    "Where pharma really stands on moving from SAS to R, from interviews with biometrics leaders."
+   ],
+   [
+    "a4c2ec",
+    "MSD migrating a validated SAS codebase to R, and how they kept it trustworthy."
+   ],
+   [
+    "147ef6",
+    "How governed open-source environments are being set up for R and Python users."
+   ],
+   [
+    "7ed817",
+    "GSK moving trusted SAS macros into a validated R package, a path you may follow."
+   ],
+   [
+    "3b8c8b",
+    "Beginner tips on connecting SAS, R and Python in one workflow."
+   ],
+   [
+    "58a05f",
+    "Building ADaM datasets in R with admiral, using ADaM knowledge you already have."
+   ],
+   [
+    "a7cb8c",
+    "A demo of validated R packages for submissions."
+   ],
+   [
+    "75d1fa",
+    "Why open-source collaboration in pharma is hard and how teams make it last."
+   ],
+   [
+    "85a431",
+    "UCB's move to open source treated as a change of mindset, not just tools."
+   ],
+   [
+    "8d7e6f",
+    "Side by side heat maps in R and SAS, an easy bridge between the two."
+   ],
+   [
+    "6df0c4",
+    "An R package for QC of ADaM datasets, close to your daily work."
+   ],
+   [
+    "86ea3d",
+    "Using R and Quarto to fill in the ADRG automatically."
+   ],
+   [
+    "85efc5",
+    "One reporting document mixing R, SAS and Python."
+   ],
+   [
+    "a83497",
+    "Pfizer's lessons from moving platform and language at the same time."
+   ],
+   [
+    "db8190",
+    "Boehringer turning migrated SAS code into a qualified R package."
+   ],
+   [
+    "d9bf9d",
+    "The confidence side of switching from SAS to R, not just the syntax."
+   ],
+   [
+    "df7cb2",
+    "An open-source Python toolkit from CDISC Library to clinical tables."
+   ]
+  ]
+ },
+ "Sharpen my toolkit": {
+  "summary": "A week of practical SAS craft: reusable macros, faster runs, smarter comparisons and cleaner TLF set-up. Wednesday afternoon packs in short coding tips you can use on Monday morning.",
+  "picks": [
+   [
+    "f4716b",
+    "Fresh ideas on making validation lighter and more risk based."
+   ],
+   [
+    "737dc4",
+    "Turn your SAS programs into lineage diagrams that are easier to document and audit."
+   ],
+   [
+    "0ec502",
+    "Reusing reports automatically on new data with SAS Viya REST APIs."
+   ],
+   [
+    "5197fc",
+    "Why automation breaks when specs are trusted blindly, and what to check first."
+   ],
+   [
+    "b6c61d",
+    "SAS macros that trace every summary count back to the patients behind it."
+   ],
+   [
+    "de921d",
+    "Cut long run times by splitting study runs into parallel jobs."
+   ],
+   [
+    "c1d5da",
+    "A sponsor macro framework producing consistent RTF TLFs straight from ADaM."
+   ],
+   [
+    "2024a1",
+    "A SAS workflow flagging what each new SDTM transfer will break in ADaM and TLFs."
+   ],
+   [
+    "5d24e6",
+    "Program titles and footnotes once in a central file instead of in every program."
+   ],
+   [
+    "8f9006",
+    "How to write SAS macros general enough to reuse across studies."
+   ],
+   [
+    "492a40",
+    "A macro turning CTCAE grading rules into reusable logic instead of hard coding."
+   ],
+   [
+    "cf8f88",
+    "Using AI to catch human errors across hundreds of TLF outputs."
+   ],
+   [
+    "477f5c",
+    "A better PROC COMPARE with automatic sorting and clearer reports."
+   ],
+   [
+    "5903a8",
+    "Keeping QC tracking up to date automatically across reruns."
+   ],
+   [
+    "840535",
+    "AE swimmer plots built in SAS from ADAE."
+   ],
+   [
+    "ef3bff",
+    "Building quality into ADaM and TLF work up front so less needs fixing later."
+   ],
+   [
+    "9ee597",
+    "Fixing PROC MIXED convergence and covariance warnings in practice."
+   ],
+   [
+    "f85602",
+    "Toolkits that summarise data differences more usefully than default PROC COMPARE."
+   ],
+   [
+    "7c2ac3",
+    "A custom SAS function to look ahead to later records in a DATA step."
+   ],
+   [
+    "c98b08",
+    "Running R inside SAS programs and passing data between them."
+   ],
+   [
+    "8576ba",
+    "CALL EXECUTE explained, for dynamic data driven code without the pitfalls."
+   ],
+   [
+    "e65cd3",
+    "Regular expressions refreshed, still handy for cleaning and checking text."
+   ]
+  ]
+ },
+ "Pipelines and automation": {
+  "summary": "Built around automated data flows: from protocol and SDTM through define.xml to reporting, with plenty of Python and modern platforms. Tuesday and Wednesday focus on end to end pipelines and tools that keep specs and code in sync.",
+  "picks": [
+   [
+    "82ec79",
+    "Automating the path from study design all the way to define.xml."
+   ],
+   [
+    "0a7599",
+    "Treating clinical data as reusable products with an agent driven pipeline."
+   ],
+   [
+    "b7c1ea",
+    "Connecting SAS Viya, Databricks and other systems through REST APIs."
+   ],
+   [
+    "81e246",
+    "Metadata driven blinding built directly into clinical data pipelines."
+   ],
+   [
+    "846c00",
+    "Roche's highly automated SDTM harmonisation at scale."
+   ],
+   [
+    "8556f0",
+    "Machine readable data transfer agreements that make incoming data checks automatic."
+   ],
+   [
+    "8535bf",
+    "Building an integrated clinical data warehouse across study types."
+   ],
+   [
+    "fdab4d",
+    "Moving 130TB to Databricks without a classic migration."
+   ],
+   [
+    "e867e1",
+    "Biomedical Concepts carried from library through capture to submission."
+   ],
+   [
+    "dba3e8",
+    "Early data engineering lessons from launching a multi platform environment."
+   ],
+   [
+    "84e7fe",
+    "A Python platform linking protocols, specs and code into a queryable graph."
+   ],
+   [
+    "ebbd02",
+    "Using Git and CI to manage a validated computing environment."
+   ],
+   [
+    "6ee1e3",
+    "A Python web app for searching CDISC standards instead of reading PDFs."
+   ],
+   [
+    "1b6b8a",
+    "A Python tool drafting SDTM trial design domains from ClinicalTrials.gov data."
+   ],
+   [
+    "51f679",
+    "An automated SDTM pipeline from data drop to review ready outputs."
+   ],
+   [
+    "6877aa",
+    "One JSON metadata source driving SDTM mapping, define.xml and reviewer guides."
+   ],
+   [
+    "717c3e",
+    "Git based CI/CD for clinical data workflows across platforms."
+   ],
+   [
+    "73ab58",
+    "Generating SDTM and ADaM specs from central metadata to cut rework."
+   ],
+   [
+    "85efc5",
+    "Reproducible reports mixing Python, R and SAS."
+   ],
+   [
+    "518383",
+    "A Python pipeline where the spec is the code, so define.xml never drifts."
+   ],
+   [
+    "df7cb2",
+    "An open-source Python toolkit from CDISC Library to clinical tables."
+   ]
+  ]
+ },
+ "Curious about AI": {
+  "summary": "A grounded look at AI agents for SDTM, ADaM and TLFs, mixing honest evaluations with working examples from sponsors and CROs. Each day pairs what works today with how teams keep it auditable.",
+  "picks": [
+   [
+    "99dfc3",
+    "Hands-on look at which AI coding practices are genuinely ready for regulated work."
+   ],
+   [
+    "0a7599",
+    "How an agent driven pipeline can make clinical data AI ready."
+   ],
+   [
+    "b5defd",
+    "Why AI code can look right but be wrong, and how to trace it."
+   ],
+   [
+    "a6eec9",
+    "A sceptic's practical guide, a good antidote to the hype."
+   ],
+   [
+    "8640f4",
+    "Live polling on how teams across the industry are really adopting AI."
+   ],
+   [
+    "69581b",
+    "An honest test of agentic AI for SDTM mapping: where it works and where it doesn't."
+   ],
+   [
+    "a4c2ec",
+    "Multiple agents migrating validated code, and how MSD kept it trustworthy."
+   ],
+   [
+    "d1d0c3",
+    "Giving an AI assistant a live R session for iterative ADaM work."
+   ],
+   [
+    "be6f2c",
+    "Roche's lessons from rolling out AI coding assistants at scale."
+   ],
+   [
+    "cedced",
+    "A platform taking studies from SDTM mapping to TLFs with generative AI built in."
+   ],
+   [
+    "2173d3",
+    "AI agents acting as QC partners for SDTM, ADaM and TLF outputs."
+   ],
+   [
+    "8707c9",
+    "AI assisted TLF drafting from specs with the programmer kept in control."
+   ],
+   [
+    "16d145",
+    "Agents generating draft TLFs with automated checks and human review."
+   ],
+   [
+    "bef92f",
+    "Comparing humans, AI and both for writing CDISC validation rules."
+   ],
+   [
+    "230331",
+    "Turning Good AI Practice principles into steps programmers can follow."
+   ],
+   [
+    "14cdb7",
+    "A fully autonomous multi LLM pipeline generating ADaM datasets."
+   ],
+   [
+    "767052",
+    "Lessons from using an AI coding agent for ADaM work."
+   ],
+   [
+    "463842",
+    "AI turning Excel specs into reviewable code, with transparency."
+   ],
+   [
+    "cd9d75",
+    "Keeping people in the loop when AI helps create SDTM."
+   ],
+   [
+    "51cd55",
+    "Agentic AI drafting ADaM specifications from the SAP and protocol."
+   ],
+   [
+    "2169b4",
+    "Designing agentic AI so it can meet GxP expectations."
+   ]
+  ]
+ },
+ "Standards specialist": {
+  "summary": "Focused on the next layer of standards: USDM and digital protocols, the electronic SAP, and ARS and ARD. Your SDTM and define.xml knowledge is the starting point for sessions that show where these standards are heading.",
+  "picks": [
+   [
+    "82ec79",
+    "USDM and Biomedical Concepts carrying a study from protocol to define.xml."
+   ],
+   [
+    "44a87a",
+    "What CDISC learned testing emerging digital standards end to end."
+   ],
+   [
+    "1283d8",
+    "The electronic SAP built from Analysis Concepts and linked to USDM."
+   ],
+   [
+    "f9a78a",
+    "A live build of an eSAP generating analysis datasets and results."
+   ],
+   [
+    "2df0ab",
+    "Why AI in biometrics depends on standards and controlled metadata."
+   ],
+   [
+    "56a65a",
+    "Open-source R tooling producing ARDs and define.xml for ARS."
+   ],
+   [
+    "c3834b",
+    "Using ARS and ARDs as the basis for QC instead of finished tables."
+   ],
+   [
+    "83708e",
+    "What SDTMIG v4.0 changes, building on SDTM you already know well."
+   ],
+   [
+    "e867e1",
+    "Following Biomedical Concepts from library to submission."
+   ],
+   [
+    "698abc",
+    "How metadata repositories are becoming AI assisted knowledge hubs."
+   ],
+   [
+    "1a93f2",
+    "Hierarchical models for the analysis results data layer."
+   ],
+   [
+    "03d172",
+    "Lessons from a real Digital Data Flow and USDM v4.0 proof of concept."
+   ],
+   [
+    "6877aa",
+    "One metadata source driving SDTM mapping and define.xml in 360i workflows."
+   ],
+   [
+    "56ccbc",
+    "Putting the new SDTMIG 4.0 DC domain into practice."
+   ],
+   [
+    "73ab58",
+    "Generating specs from central metadata to cut rework."
+   ],
+   [
+    "c40614",
+    "Hands-on with connecting the digital protocol through to analysis ready data."
+   ],
+   [
+    "0b68b2",
+    "One sponsor's journey to standardised ARDs aligned with ARS."
+   ],
+   [
+    "9affa8",
+    "Why digital schedules of activities must be precise to drive systems."
+   ]
+  ]
+ },
+ "Statistics-minded": {
+  "summary": "A methods heavy plan built around estimands, causal inference and simulation, with the Analytics and Statistics stream as its backbone. Tuesday covers causal and real world methods; Wednesday brings newer methods for trial interpretation.",
+  "picks": [
+   [
+    "f4716b",
+    "The Sunday workshops are practical; this one on risk based QC fits working closely with programmers."
+   ],
+   [
+    "edb2e7",
+    "Measures how much safety information standard AE tables lose."
+   ],
+   [
+    "1c8288",
+    "Mapping intercurrent event strategies into ADaM so estimands are easier to explain."
+   ],
+   [
+    "ae66ae",
+    "Fit for purpose real world evidence supporting a label update without an RCT."
+   ],
+   [
+    "940f11",
+    "A clear primer on causal questions and the assumptions they rely on."
+   ],
+   [
+    "ff2148",
+    "Keeping estimand thinking consistent from data standards to final TLFs."
+   ],
+   [
+    "ee84db",
+    "A simulation comparing overlap weighting with trimmed IPTW under positivity violations."
+   ],
+   [
+    "ef5242",
+    "Automatically deriving intercurrent events to check programmed datasets."
+   ],
+   [
+    "828ac4",
+    "When regulators expect re-randomisation tests, with a simulation case study."
+   ],
+   [
+    "740793",
+    "Funnel plots for setting fairer monitoring thresholds over time."
+   ],
+   [
+    "a9f0ed",
+    "A practical framework for applying estimand strategies in trial data."
+   ],
+   [
+    "dbab26",
+    "A structured approach to bias in real world analyses."
+   ],
+   [
+    "9ee597",
+    "Troubleshooting mixed models with irregularly spaced longitudinal data."
+   ],
+   [
+    "fcae7c",
+    "Making statistical code and knowledge easy to find and reuse."
+   ],
+   [
+    "617343",
+    "Action limits as an early warning for quality risks."
+   ],
+   [
+    "006cf9",
+    "Simulation to interpret interim survival when PFS and OS disagree."
+   ],
+   [
+    "ff8036",
+    "Maraca plots showing what win odds alone can hide."
+   ],
+   [
+    "9f7b7d",
+    "Methods for agreement studies with crossed, nested binary outcomes."
+   ]
+  ]
+ },
+ "Real-world evidence and HTA": {
+  "summary": "Centred on Tuesday's Real-World Evidence stream, covering registries, OMOP, bias and estimands outside randomised trials. It starts with a panel bringing NICE and MHRA voices into the room.",
+  "picks": [
+   [
+    "f4716b",
+    "None of the Sunday workshops cover RWE; this one on modern QC is broadly useful."
+   ],
+   [
+    "b26917",
+    "Hear NICE and MHRA speakers on partnerships across industry, HTA and regulators."
+   ],
+   [
+    "766eb9",
+    "A reproducible workflow for the large literature sets behind HTA reviews."
+   ],
+   [
+    "662633",
+    "Turning free text patient diaries into structured clinical events."
+   ],
+   [
+    "cd7af6",
+    "Linking EDC to electronic health records to improve data quality."
+   ],
+   [
+    "ce765f",
+    "Why extending your computing environment to real world data is harder than it looks."
+   ],
+   [
+    "ae66ae",
+    "Real world evidence supporting an EMA label update where an RCT wasn't feasible."
+   ],
+   [
+    "a4bcb8",
+    "Bringing EQ-5D-5L data into OMOP for RWE and HTA use."
+   ],
+   [
+    "183010",
+    "Statistical pitfalls moving from randomised trials to real world data."
+   ],
+   [
+    "e73769",
+    "Applying the estimand framework to real world evidence studies."
+   ],
+   [
+    "4a89ce",
+    "Keeping ADaM stable when registry data and OMOP mappings keep changing."
+   ],
+   [
+    "dbab26",
+    "A framework for spotting bias in real world health equity analyses."
+   ],
+   [
+    "b88a51",
+    "Key points from the PHUSE white paper on real world data programming."
+   ],
+   [
+    "ab28d1",
+    "Exploring clinical and real world data across different views of time."
+   ],
+   [
+    "903931",
+    "Adopting AI in HTA programming without losing domain judgement."
+   ],
+   [
+    "5f8e10",
+    "Multi agent retrieval for drafting target trial emulation protocols."
+   ]
+  ]
+ },
+ "Visualisation and apps": {
+  "summary": "Built around the Data Visualisation and Application Development streams, moving from static TLFs to dashboards, Shiny apps and new plot types. Posters on Tuesday evening add plenty of visual ideas to borrow.",
+  "picks": [
+   [
+    "f4716b",
+    "Covers QC for visual outputs and apps alongside standard deliverables."
+   ],
+   [
+    "edb2e7",
+    "Visual alternatives that keep safety information standard AE tables lose."
+   ],
+   [
+    "36421d",
+    "Visual analytics for judging virtual control groups in toxicology."
+   ],
+   [
+    "e0101e",
+    "A Shiny app turning efficacy data into interactive waterfall, swimmer and KM plots."
+   ],
+   [
+    "0ec502",
+    "Generating dashboards automatically on new data."
+   ],
+   [
+    "e03d57",
+    "Turning static TLF reports into interactive dashboards."
+   ],
+   [
+    "af680f",
+    "How Boehringer validates Shiny apps so results can support decisions."
+   ],
+   [
+    "9aa231",
+    "A modular open-source teal app replacing a proprietary review tool."
+   ],
+   [
+    "1c22a2",
+    "Controlled, up to date access to clinical data through Qlik dashboards."
+   ],
+   [
+    "8caf03",
+    "A tool for exploring SAS, XPT, JSON and XML datasets in one place."
+   ],
+   [
+    "8a176b",
+    "Fast, study level Shiny apps replacing commercial data review tools."
+   ],
+   [
+    "740793",
+    "Longitudinal funnel plots for monitoring thresholds."
+   ],
+   [
+    "7f8a3d",
+    "Heat maps and stacked plots showing several dimensions at once."
+   ],
+   [
+    "28dab9",
+    "Visual fingerprints revealing patient journey patterns swimmer plots miss."
+   ],
+   [
+    "b40fa6",
+    "Interactive Shiny apps for exploring data beyond standard TLFs."
+   ],
+   [
+    "840535",
+    "Swimmer plots for adverse events showing timing and severity."
+   ],
+   [
+    "146a60",
+    "CDISC CORE conformance checks behind a simple Shiny interface."
+   ],
+   [
+    "ff8036",
+    "Maraca plots for hierarchical composite endpoints."
+   ],
+   [
+    "d20b60",
+    "A web tool building patient disposition flows with GenAI and review."
+   ]
+  ]
+ },
+ "Submissions and regulators": {
+  "summary": "Follows the submission package from define.xml and reviewer guides to Dataset-JSON and disclosure, with regulators in the room on Monday and Tuesday. It closes with the panel on where submissions are heading next.",
+  "picks": [
+   [
+    "82ec79",
+    "Automating the route from study design to define.xml."
+   ],
+   [
+    "b26917",
+    "NICE and MHRA speakers on what makes industry and regulator partnerships work."
+   ],
+   [
+    "e13bd0",
+    "Next Generation Submission practices that shorten timelines."
+   ],
+   [
+    "5197fc",
+    "Why trusting specs and define.xml blindly breaks automation."
+   ],
+   [
+    "b69a1e",
+    "Planning transparency earlier to avoid rework in document disclosure."
+   ],
+   [
+    "da3626",
+    "Why delivering the CRT package isn't the same as being submission ready."
+   ],
+   [
+    "803c31",
+    "Hands-on anonymisation of clinical documents for CTIS under EU CTR."
+   ],
+   [
+    "6228a5",
+    "Dataset-JSON, the successor to XPT, with the FDA pilot and tools."
+   ],
+   [
+    "6a9d8b",
+    "Building define.xml specs faster with LLMs and Pinnacle 21."
+   ],
+   [
+    "097366",
+    "Making AI explainable and auditable in clinical data work."
+   ],
+   [
+    "f3f08d",
+    "Generating define.xml, SDRG and ADRG from verified data lineage."
+   ],
+   [
+    "10c840",
+    "How Roche is reshaping eSubmission support."
+   ],
+   [
+    "230331",
+    "Good AI Practice principles turned into practical submission steps."
+   ],
+   [
+    "8fadd9",
+    "EMA and industry on how AI and digital evidence will reshape submissions."
+   ],
+   [
+    "11781c",
+    "Common define.xml 2.1 mistakes and how to avoid them."
+   ],
+   [
+    "86ea3d",
+    "Filling in the ADRG automatically from datasets and metadata."
+   ],
+   [
+    "9479d8",
+    "Lessons from unexpected CBER requests across three years of submissions."
+   ],
+   [
+    "38cfab",
+    "LLMs extracting protocol information for regulatory disclosure."
+   ],
+   [
+    "1965d6",
+    "What FDA guidance on missing PRO data means in practice."
+   ],
+   [
+    "518383",
+    "Keeping specs, code and define.xml in sync automatically."
+   ]
+  ]
+ },
+ "New people manager": {
+  "summary": "Mostly leadership sessions from the People Leadership and Professional Development streams, with a thread of open source and AI so you can guide your team on both. Wednesday is almost entirely about leading people well.",
+  "picks": [
+   [
+    "f4716b",
+    "Group exercises on how QC changes with AI, open source and global teams."
+   ],
+   [
+    "b26917",
+    "Discussion of the people skills that make partnerships work."
+   ],
+   [
+    "a6aa2b",
+    "A first hand account of moving from programmer to leading people."
+   ],
+   [
+    "18abcb",
+    "Adapting training for new joiners on your team."
+   ],
+   [
+    "0457be",
+    "A quick read on where the industry stands with open source and AI."
+   ],
+   [
+    "a4c2ec",
+    "How one team built trust in AI agents, useful when guiding your own."
+   ],
+   [
+    "7bd666",
+    "Delegating ownership rather than tasks without losing control."
+   ],
+   [
+    "8cba8c",
+    "Breaking the cycle of crunch and burnout in programming teams."
+   ],
+   [
+    "8ad9a6",
+    "Why people stay or leave, especially in remote and hybrid teams."
+   ],
+   [
+    "d616b5",
+    "Building psychological safety so your team feels able to speak up."
+   ],
+   [
+    "8846d9",
+    "A plain English explanation of AI agents for leaders."
+   ],
+   [
+    "4abebd",
+    "Balancing agile ambitions with GxP reality as a business lead."
+   ],
+   [
+    "acd75a",
+    "Growth and identity when stepping up to bigger leadership roles."
+   ],
+   [
+    "85a431",
+    "Managing a move to open source as a change in identity, not just tools."
+   ],
+   [
+    "e5ee5b",
+    "Rethinking career paths around skills rather than job titles."
+   ],
+   [
+    "035164",
+    "How a graduate programme brings new programmers up to speed."
+   ],
+   [
+    "041065",
+    "Getting escalation right so issues reach the right level in time."
+   ],
+   [
+    "5da2f5",
+    "Moving a team from compliance first to ownership of outcomes."
+   ],
+   [
+    "e22883",
+    "Coaching stories and phrases you can use with your team."
+   ],
+   [
+    "423313",
+    "Interviewing programmers when candidates can lean on AI."
+   ],
+   [
+    "f1e8e3",
+    "Unlocking neurodivergent strengths in your team."
+   ]
+  ]
+ }
+}
